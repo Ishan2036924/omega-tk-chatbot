@@ -1,0 +1,130 @@
+[
+  {
+    "question": "Read a molecule from a file into OEChem",
+    "code": "from openeye import oechem\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)"
+  },
+  {
+    "question": "Write a molecule from OEChem",
+    "code": "from openeye import oechem\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\noechem.OEWriteMolecule(ofs,mol)\nofs.close()"
+  },
+  {
+    "question": "Generate conformations for my molecule with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate conformations for my database of molecules",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereochemistry in my molecule with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEFlipperOptions()\n\nfor isomer in oeomega.OEFlipper(mol,opts):\n    oechem.OEWriteMolecule(ofs,mol)\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereochemistry for my database of molecules with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEFlipperOptions()\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol,opts):\n        oechem.OEWriteMolecule(ofs,isomer)\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEFlipperOptions()\nopts.SetMaxCenters(3)\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol,opts):\n        oechem.OEWriteMolecule(ofs,isomer)\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEFlipperOptions()\nopts.SetMaxCenters(5)\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol,opts):\n        oechem.OEWriteMolecule(ofs,isomer)\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereocenters and generate 3D conformers with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nomega_opts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(omega_opts)\nopts = oeomega.OEFlipperOptions()\n\nfor isomer in oeomega.OEFlipper(mol,opts):\n    imol = oechem.OEMol(isomer)\n    ret_code = omega.Build(imol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,imol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nomega_opts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(omega_opts)\nopts = oeomega.OEFlipperOptions()\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol,opts):\n        imol = oechem.OEMol(isomer)\n        ret_code = omega.Build(imol)\n        if ret_code == oeomega.OEOmegaReturnCode_Success:\n            oechem.OEWriteMolecule(ofs,imol)\n        else:\n            print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega with max confs of 1",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetMaxConfs(1)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations using Omega for docking",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Pose)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations using Omega for ROCS",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_ROCS)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega for FastROCS",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_FastROCS)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega for freeform",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Dense)\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with GPU Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_drive_opts.SetUseGPU(True)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetTorDriveOptions(tor_drive_opts)\n\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega using thompson sampling",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_drive_opts.SetUseThompson(True)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetTorDriveOptions(tor_drive_opts)\n\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega using alternative torsion library",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_drive_opts.SetTorLib(oeomega.OETorLibType_GubaV21)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetTorDriveOptions(tor_drive_opts)\n\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with Omega using electrostatics",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_drive_opts.SetForceField('mmff94s_Sheff')\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetTorDriveOptions(tor_drive_opts)\n\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations with a fixed substructure",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nss = oechem.OESubSearch('<SMILES string>')\nss.SetMaxMatches(1)\n\nconf_fix_options = oeomega.OEConfFixOptions()\nconf_fix_options.SetFixSubSearch(ss)\n\nmol_builder_opts = oeomega.OEMolBuilderOptions()\nmol_builder = oeomega.OEMolBuilder(mol_builder_opts)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_driver = oeomega.OETorDriver(tor_drive_opts)\n\nbuild_code = mol_builder.Build(mol,conf_fix_options)\nif build_code == oeomega.OEOmegaReturnCode_Success:\n    gen_code = tor_driver.GenerateConfs(mol,conf_fix_options)\n    if gen_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(gen_code))\nelse:\n    print(oeomega.OEGetOmegaError(build_code))"
+  },
+  {
+    "question": "Generate 3D conformations with a fixed substructure given a SMARTS pattern",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nconf_fix_options = oeomega.OEConfFixOptions()\nconf_fix_options.SetFixSmarts('<SMARTS String>')\n\nmol_builder_opts = oeomega.OEMolBuilderOptions()\nmol_builder = oeomega.OEMolBuilder(mol_builder_opts)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_driver = oeomega.OETorDriver(tor_drive_opts)\n\nbuild_code = mol_builder.Build(mol,conf_fix_options)\nif build_code == oeomega.OEOmegaReturnCode_Success:\n    gen_code = tor_driver.GenerateConfs(mol,conf_fix_options)\n    if gen_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(gen_code))\nelse:\n    print(oeomega.OEGetOmegaError(build_code))"
+  },
+  {
+    "question": "Generate 3D conformations of a molecule and hold a piece of the molecule fixed",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nfixed_fs = oechem.oemolistream(argv[3])\nfixed_mol = oechem.OEMol()\noechem.OEReadMolecule(fixed_fs,fixed_mol)\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nconf_fix_options = oeomega.OEConfFixOptions()\nconf_fix_options.SetFixMol(fixed_mol)\n\nmol_builder_opts = oeomega.OEMolBuilderOptions()\nmol_builder = oeomega.OEMolBuilder(mol_builder_opts)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_driver = oeomega.OETorDriver(tor_drive_opts)\n\nbuild_code = mol_builder.Build(mol,conf_fix_options)\nif build_code == oeomega.OEOmegaReturnCode_Success:\n    gen_code = tor_driver.GenerateConfs(mol,conf_fix_options)\n    if gen_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(gen_code))\nelse:\n    print(oeomega.OEGetOmegaError(build_code))"
+  },
+  {
+    "question": "Generate 3D conformations and apply MCS constraint on a portion of my molecule",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nfixed_fs = oechem.oemolistream(argv[3])\nfixed_mol = oechem.OEMol()\noechem.OEReadMolecule(fixed_fs,fixed_mol)\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nconf_fix_options = oeomega.OEConfFixOptions()\nconf_fix_options.SetFixMol(fixed_mol)\nconf_fix_options.SetFixMCS(True)\n\nmol_builder_opts = oeomega.OEMolBuilderOptions()\nmol_builder = oeomega.OEMolBuilder(mol_builder_opts)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_driver = oeomega.OETorDriver(tor_drive_opts)\n\nbuild_code = mol_builder.Build(mol,conf_fix_options)\nif build_code == oeomega.OEOmegaReturnCode_Success:\n    gen_code = tor_driver.GenerateConfs(mol,conf_fix_options)\n    if gen_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(gen_code))\nelse:\n    print(oeomega.OEGetOmegaError(build_code))"
+  },
+  {
+    "question": "Generate 3D conformations of a macrocycle molecule with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformations of a macrocycle molecule in a specific solution",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\n# Set Dielectric Constant to change solution type. This is dielectric constant of water.\nmc_builder_opts = oeomega.OEMacrocycleBuilderOptions()\nmc_builder_opts.SetDielectricConst(80.0)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMacrocycleBuilderOptions(mc_builder_opts)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate 3D conformation of a macrocycle",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMaxConfs(1)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Calculate the number of stereocenters of a molecule with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEFlipperOptions()\n\nnum_centers = oeomega.OEFlipperStereoCenters(mol,opts)"
+  },
+  {
+    "question": "Check if molecule is a macrocycle",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nif oeomega.OEIsMacrocycle(mol):\n    print('Yes, this molecule is a macrocycle')\nelse:\n    print('No this is not a macrocycle')"
+  },
+  {
+    "question": "Remove duplicate conformers from ensemble",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nslice_ensemble_opts = oeomega.OESliceEnsembleOptions()\nconf_slicer = oeomega.OEConfSlicer(slice_ensemble_opts)\n\nif conf_slicer.Slice(mol):\n    oechem.OEWriteMolecule(ofs,mol)"
+  },
+  {
+    "question": "Write out conformer energy",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\ntor_drive_opts = oeomega.OETorDriveOptions()\ntor_drive_opts.SetSDEnergy(True)\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nopts.SetTorDriveOptions(tor_drive_opts)\n\nomega = oeomega.OEOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate Missing Fragments from input database with Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nmake_lib = oeomega.OEMakeFragLib()\nmake_lib.AddFragLib()\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmake_lib.GenerateMissingFrags(ifs,ofs)"
+  },
+  {
+    "question": "Retrieve Missing Fragments from fragment library in Omega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nmake_lib = oeomega.OEMakeFragLib()\nmake_lib.AddFragLib()\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nfor mol in make_lib.GetMissingFrags(ifs):\n    oechem.OEWriteMolecule(ofs,mol)\n\nofs.close()"
+  }
+]

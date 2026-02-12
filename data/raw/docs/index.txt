@@ -1,0 +1,218 @@
+Omega Toolkit 6.1.1.1
+
+Theory
+OMEGA Theory
+Macrocycle Conformations
+GPU-Omega
+GPU-Related Requirements
+Supported Platforms
+Supported GPUs
+NVIDIA Drivers
+Performance Tuning
+Usage
+OMEGA Examples
+Classic OEOmega Examples
+Generating Conformers
+Generating a Single Conformer
+Generating Densely Sampled Conformers
+Flipper Examples
+Generating Stereoisomers
+Generating Torsion Driven Conformation Examples
+Torsion Driving to Generating Conformer Ensemble
+Fragment Library generation Examples
+Making Fragment Library
+Macrocycle Examples
+Generating Macrocycle Conformers
+Generating a Single Macrocycle Conformer
+Appendix: Additional Examples in Python
+API
+OEConfGen Classes
+OEBuilderBase
+OEConfFixOptions
+OEConformerBuilder
+OEConfSlicer
+OEFlipperClassicOptions
+OEFlipperOptions
+OEFragBuilder
+OEFragBuilderOptions
+OEFragOptions
+OEMacrocycleBuilder
+OEMacrocycleBuilderOptions
+OEMacrocycleOmega
+OEMacrocycleOmegaOptions
+OEMakeFragLib
+OEMolBuilder
+OEMolBuilderOptions
+OEOmega
+OEOmegaOptions
+Suboption Parameter Defaults
+OERingFragOptions
+OESliceEnsembleOptions
+OETorDriveOptions
+OETorDriver
+OETorLib
+OETorLibParameter
+OEConfGen Constants
+OEFragBuilderMode
+OENitrogenEnumeration
+OEOmegaForceFieldType
+OEOmegaReturnCode
+OEOmegaSampling
+OESliceEnsembleDefaults
+OETorLibType
+OEConfGen Functions
+OEAddGlobalFragLib
+OEClearGlobalFragLib
+OEGetOmegaError
+OEGetTorValues
+OEIsMacrocycle
+OEFlipper
+OEFlipperStereoCenters
+OEOmegaGetArch
+OEOmegaGetLibraryRelease
+OEOmegaGetLibraryVersion
+OEOmegaGetLicensee
+OEOmegaGetPlatform
+OEOmegaGetRelease
+OEOmegaGetSite
+OEOmegaGetVersion
+OEOmegaIsGPUReady
+OEOmegaIsLicensed
+OEOmegaSystemHasGPU
+OESliceEnsemble
+Preliminary API
+Preliminary OEConfGen Classes
+OEThompsonOptions
+Release History
+Omega TK 6.1.1
+Minor Bug Fixes
+Omega TK 6.1.0
+New Features
+Minor Bug Fixes
+Omega TK 6.0.0
+New features
+Minor bug fixes
+Omega TK 5.1.0
+New features
+Minor bug fixes
+Omega TK 5.0.0
+New features
+Minor bug fixes
+Omega TK 4.2.2
+Minor bug fixes
+Omega TK 4.2.1
+New features
+Minor bug fixes
+Omega TK 4.2.0
+New features
+Minor bug fixes
+Omega TK 4.1.2
+Minor bug fixes
+Omega TK 4.1.1
+New features
+Major bug fixes
+Minor bug fixes
+Omega TK 4.1.0
+New features
+Major bug fixes
+Minor bug fixes
+Documentation changes
+Omega TK 4.0.0.6
+Omega TK 4.0.0
+New features
+Minor bug fixes
+Documentation changes
+General Notices
+Omega TK 2.9.1
+New features
+Major bug fixes
+Minor bug fixes
+Omega TK 2.9.0
+New features
+Major bug fixes
+Minor bug fixes
+Omega TK 2.8.0
+New features (Preliminary API)
+New features
+Major bug fixes
+Minor bug fixes
+Documentation changes
+Omega TK 2.7.0
+Omega TK 2.6.7
+New features
+Documentation changes
+Omega TK 2.6.6
+Major bug fixes
+Minor bug fixes
+Omega TK 2.6.5
+New features
+Omega TK 2.6.4
+Minor bug fixes
+Omega TK 2.6.3
+Major bug fixes
+Minor bug fixes
+Documentation changes
+Omega TK 2.6.2
+Major bug fixes
+Documentation changes
+Omega TK 2.6.1
+Minor bug fixes
+Omega TK 2.6.0
+Major bug fixes
+Documentation changes
+Omega TK 2.5.7
+Minor bug fixes
+C#-specific changes
+Omega TK 2.5.6
+New features
+Minor bug fixes
+Documentation fixes
+Omega TK 2.5.5
+Minor bug fixes
+Documentation fixes
+Omega TK 2.5.4
+New features
+Major bug fixes
+Minor bug fixes
+Omega TK 2.5.3
+New features
+Minor bug fixes
+Omega TK 2.5.2
+New features
+Minor bug fixes
+Omega TK 2.5.1
+New features
+Major bug fixes
+Minor bug fixes
+Documentation fixes
+Omega TK 2.5.0
+New features
+Major bug fixes
+Minor bug fixes
+Omega TK 2.4.6
+Minor bug fixes
+Omega TK 2.4.5
+New features
+Omega TK 2.4.4
+Bug fixes
+Omega TK 2.4.1
+New features
+Bug fixes
+Omega TK 2.4.0
+New features
+Bug fixes
+Omega TK 2.3.3
+New features
+Bug fixes
+Omega TK 2.3.2
+Bug fixes
+Omega TK 2.3.1
+New features
+Bug fixes
+Omega TK 2.3.0
+New features
+Bug fixes
+Omega TK 2.2.2
+Bug fixes
+Omega TK 2.2.1
+Bug fixes
