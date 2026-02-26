@@ -1,0 +1,2298 @@
+OMEGA Examples
+
+The following table lists the currently available
+Omega TK
+examples:
+Program
+Description
+simple_omega.py
+generating conformers
+single_conformer.py
+generating a single conformer
+dens_omega.py
+generating densely sampled conformers
+stereo_and_torsion.py
+generating stereoisomers
+torsion_drive.py
+torsion driving to generating conformer ensemble
+make_fraglib.py
+making fragment library
+macrocycle.py
+generating macrocycle conformers
+single_conf_macrocycle.py
+generating single macrocycle conformer
+Note
+If the input molecule has SD tag data, the data will be copied to every conformer in the results molecule.
+Classic OEOmega Examples
+
+Generating Conformers
+
+The following code example is a simple example of how to generate conformers
+using the
+OEOmega
+object.
+See also
+OEOmegaOptions
+class
+OEOmega
+class
+OESimpleAppOptions
+class
+Listing 1: Generating Conformers
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+omegaOpts
+=
+oeomega
+.
+OEOmegaOptions
+()
+omegaOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-rms"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-ewindow"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-maxconfs"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-useGPU"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+omegaOpts
+,
+"Omega"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol3D
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+omegaOpts
+.
+UpdateValues
+(
+opts
+)
+omega
+=
+oeomega
+.
+OEOmega
+(
+omegaOpts
+)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+ret_code
+=
+omega
+.
+Build
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+simple_omega.py
+Generating a Single Conformer
+
+The following code example is a simple example of how to generate a
+single conformer.
+See also
+OEConformerBuilder
+class
+Listing 2: Generating a Single Conformer
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+if
+len
+(
+argv
+)
+!=
+3
+:
+oechem
+.
+OEThrow
+.
+Usage
+(
+"
+%s
+<infile> <outfile>"
+%
+argv
+[
+0
+])
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+argv
+[
+1
+]):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+argv
+[
+1
+])
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+argv
+[
+2
+]):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+argv
+[
+2
+])
+if
+not
+oechem
+.
+OEIs3DFormat
+(
+ofs
+.
+GetFormat
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Invalid output file format for 3D coordinates!"
+)
+builder
+=
+oeomega
+.
+OEConformerBuilder
+()
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+ret_code
+=
+builder
+.
+Build
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+single_conformer.py
+Generating Densely Sampled Conformers
+
+The following code example is a simple example of how to generate densely sampled
+conformers, as used in
+OEFreeFormConf
+calculations, using the
+OEOmega
+object.
+See also
+OEOmegaOptions
+class
+OEOmega
+class
+OEOmegaSampling
+namespace
+OESimpleAppOptions
+class
+Listing 3: Generating Densely Sampled Conformers
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+omegaOpts
+=
+oeomega
+.
+OEOmegaOptions
+(
+oeomega
+.
+OEOmegaSampling_Dense
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-rms"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-ewindow"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-maxconfs"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-useGPU"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-searchFF"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+omegaOpts
+,
+"Omega"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol3D
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+omegaOpts
+.
+UpdateValues
+(
+opts
+)
+omega
+=
+oeomega
+.
+OEOmega
+(
+omegaOpts
+)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+ret_code
+=
+omega
+.
+Build
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+dense_omega.py
+Flipper Examples
+
+Generating Stereoisomers
+
+The following code example is a simple example of how to use the
+OEFlipper
+function to generate stereoisomers. The
+code example also demonstrates that stereoisomers should be generated
+before generating conformers.
+See also
+OEOmegaOptions
+class
+OEOmega
+class
+OEFlipper
+function
+OESimpleAppOptions
+class
+Listing 4: Generating Stereoisomers
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+flipperOpts
+=
+oeomega
+.
+OEFlipperOptions
+()
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+flipperOpts
+,
+"stereo_and_torsion"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+flipperOpts
+.
+UpdateValues
+(
+opts
+)
+omega
+=
+oeomega
+.
+OEOmega
+()
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+for
+enantiomer
+in
+oeomega
+.
+OEFlipper
+(
+mol
+.
+GetActive
+(),
+flipperOpts
+):
+fmol
+=
+oechem
+.
+OEMol
+(
+enantiomer
+)
+ret_code
+=
+omega
+.
+Build
+(
+fmol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+fmol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+fmol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+stereo_and_torsion.py
+Generating Torsion Driven Conformation Examples
+
+Torsion Driving to Generating Conformer Ensemble
+
+The following code example is a simple example of how to torsion
+drive from given 3D structure, to generate a conformer ensemble.
+See also
+OETorDriveOptions
+class
+OETorDriver
+class
+OESimpleAppOptions
+class
+Listing 5: Torsion Driving to Generating Conformer Ensemble
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+torOpts
+=
+oeomega
+.
+OETorDriveOptions
+()
+torOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+torOpts
+.
+SetParameterVisibility
+(
+"-rms"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+torOpts
+.
+SetParameterVisibility
+(
+"-ewindow"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+torOpts
+.
+SetParameterVisibility
+(
+"-maxconfs"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+torOpts
+,
+"Omega"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol3D
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+torOpts
+.
+UpdateValues
+(
+opts
+)
+tordriver
+=
+oeomega
+.
+OETorDriver
+(
+torOpts
+)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+ret_code
+=
+tordriver
+.
+GenerateConfs
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+torsion_drive.py
+Fragment Library generation Examples
+
+Making Fragment Library
+
+The following code example is a simple example of how to generate
+a fragment library.
+See also
+OEFragBuilderOptions
+class
+OEMakeFragLib
+class
+OESimpleAppOptions
+class
+Listing 6: Making Fragment Library
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+libOpts
+=
+oeomega
+.
+OEFragBuilderOptions
+()
+libOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+libOpts
+.
+SetParameterVisibility
+(
+"-buildFF"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+libOpts
+,
+"Makefraglib"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol3D
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+libOpts
+.
+UpdateValues
+(
+opts
+)
+makefraglib
+=
+oeomega
+.
+OEMakeFragLib
+(
+libOpts
+)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+if
+ofs
+.
+GetFormat
+()
+!=
+oechem
+.
+OEFormat_OEB
+:
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Output file has to have OEB format!"
+)
+makefraglib
+.
+ClearFragLibs
+()
+makefraglib
+.
+GenerateMissingFrags
+(
+ifs
+,
+ofs
+)
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+make_fraglib.py
+Macrocycle Examples
+
+Generating Macrocycle Conformers
+
+The following code example is a simple example of how to generate conformers
+using the OEMacrocycleOmega object.
+See also
+OEMacrocycleOmegaOptions
+class
+OEMacrocycleOmega
+class
+OESimpleAppOptions
+class
+Listing 7: Generating Macrocycle Conformers
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+omegaOpts
+=
+oeomega
+.
+OEMacrocycleOmegaOptions
+()
+omegaOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-rms"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-ewindow"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+omegaOpts
+.
+SetParameterVisibility
+(
+"-maxconfs"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+omegaOpts
+,
+"Omega"
+,
+oechem
+.
+OEFileStringType_Mol
+,
+oechem
+.
+OEFileStringType_Mol3D
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+omegaOpts
+.
+UpdateValues
+(
+opts
+)
+mcomega
+=
+oeomega
+.
+OEMacrocycleOmega
+(
+omegaOpts
+)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+ret_code
+=
+mcomega
+.
+Build
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+else
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+macrocycle.py
+Generating a Single Macrocycle Conformer
+
+The following code example is a simple example of how to generate a
+single macrocycle conformer using the OEMacrocycleBuilder object.
+See also
+OEMacrocycleBuilderOptions
+class
+OEMacrocycleBuilder
+class
+OESimpleAppOptions
+class
+Listing 8: Generating a Single Macrocycle Conformer
+#!/usr/bin/env python
+# (C) 2022 Cadence Design Systems, Inc. (Cadence)
+# All rights reserved.
+# TERMS FOR USE OF SAMPLE CODE The software below ("Sample Code") is
+# provided to current licensees or subscribers of Cadence products or
+# SaaS offerings (each a "Customer").
+# Customer is hereby permitted to use, copy, and modify the Sample Code,
+# subject to these terms. Cadence claims no rights to Customer's
+# modifications. Modification of Sample Code is at Customer's sole and
+# exclusive risk. Sample Code may require Customer to have a then
+# current license or subscription to the applicable Cadence offering.
+# THE SAMPLE CODE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT
+# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be
+# liable for any damages or liability in connection with the Sample Code
+# or its use.
+import
+sys
+from
+openeye
+import
+oechem
+from
+openeye
+import
+oeomega
+def
+main
+(
+argv
+=
+[
+__name__
+]):
+buildOpts
+=
+oeomega
+.
+OEMacrocycleBuilderOptions
+()
+buildOpts
+.
+SetParameterVisibility
+(
+oechem
+.
+OEParamVisibility_Hidden
+)
+buildOpts
+.
+SetParameterVisibility
+(
+"-seed"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+buildOpts
+.
+SetParameterVisibility
+(
+"-dielectric_constant"
+,
+oechem
+.
+OEParamVisibility_Simple
+)
+inType
+=
+oechem
+.
+OEFileStringType_Mol
+outType
+=
+oechem
+.
+OEFileStringType_Mol3D
+opts
+=
+oechem
+.
+OESimpleAppOptions
+(
+buildOpts
+,
+"macrocycle_builder"
+,
+inType
+,
+outType
+)
+if
+oechem
+.
+OEConfigureOpts
+(
+opts
+,
+argv
+,
+False
+)
+==
+oechem
+.
+OEOptsConfigureStatus_Help
+:
+return
+0
+buildOpts
+.
+UpdateValues
+(
+opts
+)
+#builder = oeomega.OEMacrocycleBuilder(buildOpts)
+ifs
+=
+oechem
+.
+oemolistream
+()
+if
+not
+ifs
+.
+open
+(
+opts
+.
+GetInFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for reading"
+%
+opts
+.
+GetInFile
+())
+ofs
+=
+oechem
+.
+oemolostream
+()
+if
+not
+ofs
+.
+open
+(
+opts
+.
+GetOutFile
+()):
+oechem
+.
+OEThrow
+.
+Fatal
+(
+"Unable to open
+%s
+for writing"
+%
+opts
+.
+GetOutFile
+())
+for
+mol
+in
+ifs
+.
+GetOEMols
+():
+oechem
+.
+OEThrow
+.
+Info
+(
+"Title:
+%s
+"
+%
+mol
+.
+GetTitle
+())
+itlimit
+=
+1000
+itnum
+=
+0
+ret_code
+=
+oeomega
+.
+OEOmegaReturnCode_Failed
+while
+itnum
+<=
+itlimit
+:
+builder
+=
+oeomega
+.
+OEMacrocycleBuilder
+(
+buildOpts
+)
+ret_code
+=
+builder
+.
+Build
+(
+mol
+)
+if
+ret_code
+==
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEWriteMolecule
+(
+ofs
+,
+mol
+)
+break
+else
+:
+buildOpts
+.
+SetRandomSeed
+(
+buildOpts
+.
+GetRandomSeed
+()
++
+1
+)
+++
+itnum
+if
+ret_code
+!=
+oeomega
+.
+OEOmegaReturnCode_Success
+:
+oechem
+.
+OEThrow
+.
+Warning
+(
+"
+%s
+:
+%s
+"
+%
+(
+mol
+.
+GetTitle
+(),
+oeomega
+.
+OEGetOmegaError
+(
+ret_code
+)))
+return
+0
+if
+__name__
+==
+"__main__"
+:
+sys
+.
+exit
+(
+main
+(
+sys
+.
+argv
+))
+Download code
+single_conf_macrocycle.py
