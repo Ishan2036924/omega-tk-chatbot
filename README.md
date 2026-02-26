@@ -372,20 +372,34 @@ I'm designed to help with OpenEye Omega Toolkit code and questions. I can help y
 
 ## Creating a branch and pushing the UI
 
-To put the Streamlit UI on a new branch and push to GitHub:
+**If the repo already has `.git`** (already cloned):
+
+```bash
+cd omega-tk-chatbot
+git fetch origin main
+git checkout -b feature/streamlit-ui origin/main   # or: git checkout feature/streamlit-ui if branch exists
+git add app.py src/streamlit_backend.py requirements.txt README.md
+git status   # confirm the 4 files are "to be committed"
+git commit -m "Add Streamlit web UI with guardrail styling and copy button"
+git push -u origin feature/streamlit-ui
+```
+
+**If you see "src refspec feature/streamlit-ui does not match any"** — the branch has no commits (e.g. after re-running `git init`). Fix: (1) `git checkout feature/streamlit-ui`, (2) `git add` the four files and `git commit`, (3) then `git push -u origin feature/streamlit-ui`.
+
+**First-time setup** (no `.git` yet):
 
 ```bash
 cd omega-tk-chatbot
 git init
 git remote add origin https://github.com/Ishan2036924/omega-tk-chatbot.git
 git fetch origin main
-git checkout -b feature/streamlit-ui
+git checkout -b feature/streamlit-ui origin/main
 git add app.py src/streamlit_backend.py requirements.txt README.md
 git commit -m "Add Streamlit web UI with guardrail styling and copy button"
 git push -u origin feature/streamlit-ui
 ```
 
-Then open a Pull Request on GitHub from `feature/streamlit-ui` into `main`.
+Then open a PR: https://github.com/Ishan2036924/omega-tk-chatbot/pull/new/feature/streamlit-ui
 
 ---
 
