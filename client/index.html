@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Omega TK Code Assistant</title>
+
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              surface: '#212121',
+              'surface-2': '#2f2f2f',
+              'surface-3': '#3f3f3f',
+            },
+          },
+        },
+      }
+    </script>
+
+    <!-- highlight.js: dark theme + Python language -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/python.min.js"></script>
+
+    <style>
+      /* Remove default highlight.js background so our wrapper controls it */
+      .hljs { background: transparent !important; }
+      /* Smooth bounce for typing dots */
+      @keyframes dot-bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40%            { transform: translateY(-6px); }
+      }
+      .dot-bounce { animation: dot-bounce 1.2s infinite ease-in-out; }
+    </style>
+  </head>
+  <body class="bg-[#212121] text-white antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

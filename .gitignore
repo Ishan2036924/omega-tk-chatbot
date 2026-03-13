@@ -42,3 +42,5 @@ env/
 # Processed data (can be regenerated)
 # Uncomment if you don't want to track the index
 # data/processed/
+client/node_modules/
+client/dist/
