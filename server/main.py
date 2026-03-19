@@ -64,12 +64,12 @@ class ChatResponse(BaseModel):
     response: str
 
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"status": "ok"}
 
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     try:
         _ensure_pipeline()
