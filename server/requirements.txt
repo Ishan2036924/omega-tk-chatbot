@@ -9,3 +9,4 @@ pytest
 httpx
 pytest-asyncio
 pypdf
+python-multipart
