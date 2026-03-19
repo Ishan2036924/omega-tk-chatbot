@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+openai
+supabase
+sentence-transformers
+faiss-cpu
+python-dotenv
+pytest
+httpx
+pytest-asyncio
