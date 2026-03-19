@@ -1,0 +1,451 @@
+OEFlipperOptions
+
+class
+OEFlipperOptions
+:
+public
+OESystem
+::
+OEOptions
+See also
+OEFlipper
+function
+Code Examples
+Generating Stereoisomers
+example
+The
+OEFlipperOptions
+class defines the following public methods:
+GetAtomPredicate
+and
+SetAtomPredicate
+GetBondPredicate
+and
+SetBondPredicate
+GetEnhancedStereo
+and
+SetEnhancedStereo
+GetEnumAtoms
+and
+SetEnumAtoms
+GetEnumAtomSpecifiedStereo
+and
+SetEnumAtomSpecifiedStereo
+GetEnumBonds
+and
+SetEnumBonds
+GetEnumBondSpecifiedStereo
+and
+SetEnumBondSpecifiedStereo
+GetEnumBridgehead
+and
+SetEnumBridgehead
+GetEnumEZ
+and
+SetEnumEZ
+GetEnumNitrogen
+and
+SetEnumNitrogen
+GetEnumRS
+and
+SetEnumRS
+GetEnumSpecifiedStereo
+and
+SetEnumSpecifiedStereo
+GetEnumRelativeAtomStereo
+and
+SetEnumRelativeAtomStereo
+GetMaxCenters
+and
+SetMaxCenters
+GetWarts
+and
+SetWarts
+Constructors
+
+OEFlipperOptions
+()
+OEFlipperOptions
+(
+const
+OEFlipperOptions
+&
+)
+Default and copy constructors.
+operator=
+
+OEFlipperOptions
+&
+operator
+=
+(
+const
+OEFlipperOptions
+&
+)
+Assignment operator.
+GetAtomPredicate
+
+const
+OESystem
+::
+OEUnaryPredicate
+<
+OEChem
+::
+OEAtomBase
+>*
+GetAtomPredicate
+()
+const
+See
+SetAtomPredicate
+method.
+GetBondPredicate
+
+const
+OESystem
+::
+OEUnaryPredicate
+<
+OEChem
+::
+OEBondBase
+>*
+GetBondPredicate
+()
+const
+See
+SetBondPredicate
+method.
+GetEnhancedStereo
+
+bool
+GetEnhancedStereo
+()
+const
+See
+SetEnhancedStereo
+method.
+GetEnumAtoms
+
+bool
+GetEnumAtoms
+()
+const
+See
+SetEnumAtoms
+method.
+GetEnumAtomSpecifiedStereo
+
+bool
+GetEnumAtomSpecifiedStereo
+()
+const
+See
+SetEnumAtomSpecifiedStereo
+method.
+GetEnumBonds
+
+bool
+GetEnumBonds
+()
+const
+See
+SetEnumBonds
+method.
+GetEnumBondSpecifiedStereo
+
+bool
+GetEnumBondSpecifiedStereo
+()
+const
+See
+SetEnumBondSpecifiedStereo
+method.
+GetEnumBridgehead
+
+bool
+GetEnumBridgehead
+()
+const
+See
+SetEnumBridgehead
+method.
+GetEnumEZ
+
+bool
+GetEnumEZ
+()
+const
+See
+SetEnumEZ
+method.
+GetEnumNitrogen
+
+bool
+GetEnumNitrogen
+()
+const
+See
+SetEnumNitrogen
+method.
+GetEnumRS
+
+bool
+GetEnumRS
+()
+const
+See
+SetEnumRS
+method.
+GetEnumRelativeAtomStereo
+
+bool
+GetEnumRelativeAtomStereo
+()
+const
+See
+SetEnumRelativeAtomStereo
+method.
+GetEnumSpecifiedStereo
+
+bool
+GetEnumSpecifiedStereo
+()
+const
+See
+SetEnumSpecifiedStereo
+method.
+GetMaxCenters
+
+unsigned
+GetMaxCenters
+()
+const
+See
+SetMaxCenters
+method.
+GetWarts
+
+bool
+GetWarts
+()
+const
+See
+SetWarts
+method.
+SetAtomPredicate
+
+bool
+SetAtomPredicate
+(
+const
+OESystem
+::
+OEUnaryPredicate
+<
+OEChem
+::
+OEAtomBase
+>&
+)
+Provides an input atom predicate to define the selection of the atom stereocenters which should be enumerated.
+SetBondPredicate
+
+bool
+SetBondPredicate
+(
+const
+OESystem
+::
+OEUnaryPredicate
+<
+OEChem
+::
+OEBondBase
+>&
+)
+Provides an input bond predicate to define the selection of the bond stereocenters which should be enumerated.
+SetEnhancedStereo
+
+bool
+SetEnhancedStereo
+(
+const
+bool
+)
+Sets whether to consider explicit MDL enhanced stereogroups during flipping or not.
+Enhanced stereogroups generally contain a collection of stereocenters which should be considered
+as a collective unit, where a ‘flip’ implies that all centers in the group should be flipped,
+thus retaining the relative stereo parity between the grouped stereocenters. With this flag enabled,
+far fewer enantiomers will be generated than for individual stereocenter flipping activities,
+and relative stereo configurations will be retained. When enabled, explicitly marked absolute
+stereocenters are excluded from the flipping activities. Care should be taken to ensure that any
+custom atom predicate returns all atoms involved in enhanced stereogroups.
+Default: False.
+Note
+The membership and type of existing enhanced stereogroups are not modified as a result of the flipping operation.
+That is, explicit stereogroups of
+and
+and
+or
+are not promoted to
+abs
+groups as a result of stereocenter parity flips.
+This retains the source of original stereogroup(s) in the generated isomer(s) for post-flipping validations and processing.
+This behavior is true regardless of the setting of
+GetEnhancedStereo
+.
+Stereocenters can be explicitly promoted to
+abs
+centers by deletion of all stereogroups, or deleting all stereogroups and
+adding marked stereocenters to a single new
+abs
+stereogroup.
+See also
+GetGroups
+method
+OEIsMDLStereoGroup
+class
+SetEnumAtoms
+
+bool
+SetEnumAtoms
+(
+const
+bool
+)
+Sets whether to include R/S stereocenters in the enumeration or not. If
+false
+,
+disregards atom enumerations.
+Default: True.
+SetEnumAtomSpecifiedStereo
+
+bool
+SetEnumAtomSpecifiedStereo
+(
+const
+bool
+)
+Sets whether to force the modification of all of the R/S stereocenters in a molecule or not. If
+false
+,
+will only enumerate stereocenters which do not already have a specified stereochemistry.
+Default: False.
+SetEnumBonds
+
+bool
+SetEnumBonds
+(
+const
+bool
+)
+Sets whether to include E/Z bonds in the enumeration or not. If
+false
+,
+disregards bond enumerations.
+Default: True.
+SetEnumBondSpecifiedStereo
+
+bool
+SetEnumBondSpecifiedStereo
+(
+const
+bool
+)
+Sets whether to force the modification of all of the E/Z stereocenters in a molecule or not. If
+false
+,
+will only enumerate bonds which do not already have a specified stereochemistry.
+Default: False.
+SetEnumBridgehead
+
+bool
+SetEnumBridgehead
+(
+const
+bool
+)
+Sets whether to enumerate bridgehead stereocenters or not.
+Default: False.
+SetEnumEZ
+
+bool
+SetEnumEZ
+(
+const
+bool
+)
+Sets whether to enumerate E/Z stereocenters or not.
+Default: True.
+SetEnumNitrogen
+
+bool
+SetEnumNitrogen
+(
+const
+bool
+)
+Controls the behavior with respect to enumeration of nonterminal nitrogens. Any nitrogen with pyramidal geometry in the initial model of
+the input molecule, and having no more than two ring bonds is considered to be ‘invertible’. Will enumerate all possible puckers if set to
+true
+.
+Default: False.
+SetEnumRS
+
+bool
+SetEnumRS
+(
+const
+bool
+)
+Sets whether to enumerate R/S stereocenters or not.
+Default: True.
+SetEnumRelativeAtomStereo
+
+bool
+SetEnumRelativeAtomStereo
+(
+const
+bool
+)
+Sets whether to include enumeration of internally perceived relative atom stereocenters (e.g., 1,4-disubstituted cyclohexanes) in a molecule or not.
+If
+true
+, consider relative stereocenters during stereoenumeration.
+Default: False.
+SetEnumSpecifiedStereo
+
+bool
+SetEnumSpecifiedStereo
+(
+const
+bool
+)
+Sets whether to force the modification of all of the atom and bond stereocenters in a molecule or not. If
+false
+,
+will only enumerate stereocenters which do not already have a specified stereochemistry.
+Default: False.
+SetMaxCenters
+
+bool
+SetMaxCenters
+(
+const
+unsigned
+)
+Sets the maximum number of stereocenters or groups of stereocenters which will be fully enumerated.
+Default: 12.
+SetWarts
+
+bool
+SetWarts
+(
+const
+bool
+)
+Sets whether to generate unique titles for molecules.
+Default: False.

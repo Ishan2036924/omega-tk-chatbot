@@ -1,0 +1,69 @@
+OEOmegaSampling
+
+This namespace contains constants that are used with
+OEOmegaOptions
+to control the
+defaults to be set for omega options. Different sets of default options
+prepares omega to generate structures that are optimal for different
+usages.
+Code Examples
+Generating Densely Sampled Conformers
+example
+Classic
+Options to generate a set of conformers representing a gas phase ensemble.
+Dense
+Options to generate a dense set of conformers optimal for FreeFormConf usage.
+Caution
+GPU-Omega is not compatible with the dense mode default force field. To
+enable GPU-Omega and utilize a GPU set
+OETorDriveOptions.SetForceField
+to
+OEMMFFSheffieldFFType_MMFF94Smod_NOESTAT
+Pose
+Options to generate a set of conformers suitable for molecular alignment
+and pose prediction by docking.
+ROCS
+Options to generate a set of conformers suitable for ROCS usage.
+FastROCS
+Options to generate a sparse set of conformers suitable for FastROCS usage.
+Options overridden by various modes from the default
+OEOmegaSampling_Classic
+mode:
+Option
+Classic
+Dense
+Pose
+ROCS
+FastROCS
+RangeIncrement
+8
+MaxConfs
+200
+20000
+200, 800
+50
+10
+StrictStereo
+True
+False
+MaxSearchTime
+120.0
+3600.0
+EnergyWindow
+10.0
+15.0
+RMSThreshold
+0.5
+0.3
+EnumNitrogen
+OENitrogenEnumeration_Unspecified
+OENitrogenEnumeration_All
+SampleHydrogens
+False
+True
+SearchForceField
+mmff94smod_NoEstat
+mmff94s_Sheff
+FragBuilderOptions
+Fast
+Dense

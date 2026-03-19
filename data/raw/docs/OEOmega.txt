@@ -1,0 +1,136 @@
+OEOmega
+
+class
+OEOmega
+This class defines an interface for generating ensembles of conformers
+of small molecules.
+See also
+OEOmegaOptions
+class
+Code Examples
+Generating Conformers
+example
+Generating Densely Sampled Conformers
+example
+Generating Stereoisomers
+example
+Constructors
+
+OEOmega
+()
+OEOmega
+(
+const
+OEOmegaOptions
+&
+)
+OEOmega
+(
+const
+OEOmega
+&
+)
+Default and copy constructors.
+operator=
+
+OEOmega
+&
+operator
+=
+(
+const
+OEOmega
+&
+)
+Assignment operator.
+AddFragLib
+
+void
+AddFragLib
+()
+void
+AddFragLib
+(
+const
+std
+::
+string
+&
+)
+void
+AddFragLib
+(
+OEPlatform
+::
+oeistream
+&
+)
+The parameterless version will load the built-in fraglib immediately.
+By default, the built-in fraglib does not load until
+OEOmega.Build
+is called for the first time.
+The
+string
+and
+oeistream
+versions will add an external fraglib.
+This will be used in addition to the
+built-in fraglib. To use only this fraglib, call
+OEOmega.ClearFragLibs
+first.
+Note
+An enhanced fragment library,
+omega_fragment_lib_2020.oeb.gz
+,
+that improves the performance of conformer
+generation is available on request from the
+database downloads page
+.
+Build
+
+unsigned
+Build
+(
+OEChem
+::
+OEMCMolBase
+&
+)
+const
+Generates conformers for a molecule. Returns
+OEOmegaReturnCode_Success
+if
+the process succeeds, otherwise returns an error code from the
+OEOmegaReturnCode
+namespace.
+ClearFragLibs
+
+void
+ClearFragLibs
+()
+Clears all fraglibs from the
+OEOmega
+object.
+GetOptions
+
+const
+OEOmegaOptions
+&
+GetOptions
+()
+const
+Retrieves a constant reference to the
+OEOmegaOptions
+instance as currently set.
+SetOptions
+
+void
+SetOptions
+(
+const
+OEOmegaOptions
+&
+)
+Sets the structure generation options by passing in an
+OEOmegaOptions
+instance.

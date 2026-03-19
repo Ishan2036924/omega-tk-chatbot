@@ -192,6 +192,36 @@
     "type": "qa_pair"
   },
   {
+    "id": "training_32",
+    "text": "Question: Generate conformers for a database of macrocycle molecules with OEMacrocycleOmega\n\nCode:\n```python\nfrom openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nomega = oeomega.OEMacrocycleOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()\n```",
+    "source": "training_prompts",
+    "type": "qa_pair"
+  },
+  {
+    "id": "training_33",
+    "text": "Question: Filter a molecule database for macrocycles and generate conformers only for macrocycles\n\nCode:\n```python\nfrom openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nomega = oeomega.OEMacrocycleOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    if not oeomega.OEIsMacrocycle(mol):\n        continue\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()\n```",
+    "source": "training_prompts",
+    "type": "qa_pair"
+  },
+  {
+    "id": "training_34",
+    "text": "Question: Generate macrocycle conformers with a maximum number of conformers set\n\nCode:\n```python\nfrom openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMaxConfs(200)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()\n```",
+    "source": "training_prompts",
+    "type": "qa_pair"
+  },
+  {
+    "id": "training_35",
+    "text": "Question: Route molecules through the correct Omega engine \u2014 standard Omega for small molecules, OEMacrocycleOmega for macrocycles\n\nCode:\n```python\nfrom openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nstd_opts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nstd_omega = oeomega.OEOmega(std_opts)\n\nmc_opts = oeomega.OEMacrocycleOmegaOptions()\nmc_omega = oeomega.OEMacrocycleOmega(mc_opts)\n\nfor mol in ifs.GetOEMols():\n    if oeomega.OEIsMacrocycle(mol):\n        ret_code = mc_omega.Build(mol)\n    else:\n        ret_code = std_omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()\n```",
+    "source": "training_prompts",
+    "type": "qa_pair"
+  },
+  {
+    "id": "training_36",
+    "text": "Question: Generate macrocycle conformers in aqueous solution using OEMacrocycleOmega with water dielectric constant\n\nCode:\n```python\nfrom openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\n# Water dielectric constant = 80.0 (default is vacuum ~1.0)\nmc_builder_opts = oeomega.OEMacrocycleBuilderOptions()\nmc_builder_opts.SetDielectricConst(80.0)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMacrocycleBuilderOptions(mc_builder_opts)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()\n```",
+    "source": "training_prompts",
+    "type": "qa_pair"
+  },
+  {
     "id": "doc_0_0",
     "text": "Omega Toolkit 6.1.1.1\n\uf0c1\nTheory\nOMEGA Theory\nMacrocycle Conformations\nGPU-Omega\nGPU-Related Requirements\nSupported Platforms\nSupported GPUs\nNVIDIA Drivers\nPerformance Tuning\nUsage\nOMEGA Examples\nClassic OEOmega Examples\nGenerating Conformers\nGenerating a Single Conformer\nGenerating Densely Sampled Conformers\nFlipper Examples\nGenerating Stereoisomers\nGenerating Torsion Driven Conformation Examples\nTorsion Driving to Generating Conformer Ensemble\nFragment Library generation Examples",
     "source": "doc_0",
@@ -247,302 +277,512 @@
   },
   {
     "id": "doc_1_0",
-    "text": "OMEGA Examples\n\uf0c1\nThe following table lists the currently available\nOmega TK\nexamples:\nProgram\nDescription\nsimple_omega.py\ngenerating conformers\nsingle_conformer.py\ngenerating a single conformer\ndens_omega.py\ngenerating densely sampled conformers\nstereo_and_torsion.py\ngenerating stereoisomers\ntorsion_drive.py\ntorsion driving to generating conformer ensemble\nmake_fraglib.py\nmaking fragment library\nmacrocycle.py\ngenerating macrocycle conformers\nsingle_conf_macrocycle.py",
+    "text": "OEOmega\n\uf0c1\nclass\nOEOmega\nThis class defines an interface for generating ensembles of conformers\nof small molecules.\nSee also\nOEOmegaOptions\nclass\nCode Examples\nGenerating Conformers\nexample\nGenerating Densely Sampled Conformers\nexample\nGenerating Stereoisomers\nexample\nConstructors\n\uf0c1\nOEOmega\n()\nOEOmega\n(\nconst\nOEOmegaOptions\n&\n)\nOEOmega\n(\nconst\nOEOmega\n&\n)\nDefault and copy constructors.\noperator=\n\uf0c1\nOEOmega\n&\noperator\n=\n(\nconst\nOEOmega\n&\n)\nAssignment operator.\nAddFragLib\n\uf0c1\nvoid\nAddFragLib\n()\nvoid",
     "source": "doc_1",
     "type": "documentation"
   },
   {
     "id": "doc_1_1",
-    "text": "single_conf_macrocycle.py\ngenerating single macrocycle conformer\nNote\nIf the input molecule has SD tag data, the data will be copied to every conformer in the results molecule.\nClassic OEOmega Examples\n\uf0c1\nGenerating Conformers\n\uf0c1\nThe following code example is a simple example of how to generate conformers\nusing the\nOEOmega\nobject.\nSee also\nOEOmegaOptions\nclass\nOEOmega\nclass\nOESimpleAppOptions\nclass\nListing 1: Generating Conformers\n#!/usr/bin/env python",
+    "text": "AddFragLib\n\uf0c1\nvoid\nAddFragLib\n()\nvoid\nAddFragLib\n(\nconst\nstd\n::\nstring\n&\n)\nvoid\nAddFragLib\n(\nOEPlatform\n::\noeistream\n&\n)\nThe parameterless version will load the built-in fraglib immediately.\nBy default, the built-in fraglib does not load until\nOEOmega.Build\nis called for the first time.\nThe\nstring\nand\noeistream\nversions will add an external fraglib.\nThis will be used in addition to the\nbuilt-in fraglib. To use only this fraglib, call\nOEOmega.ClearFragLibs\nfirst.\nNote",
     "source": "doc_1",
     "type": "documentation"
   },
   {
     "id": "doc_1_2",
-    "text": "#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and",
+    "text": "OEOmega.ClearFragLibs\nfirst.\nNote\nAn enhanced fragment library,\nomega_fragment_lib_2020.oeb.gz\n,\nthat improves the performance of conformer\ngeneration is available on request from the\ndatabase downloads page\n.\nBuild\n\uf0c1\nunsigned\nBuild\n(\nOEChem\n::\nOEMCMolBase\n&\n)\nconst\nGenerates conformers for a molecule. Returns\nOEOmegaReturnCode_Success\nif\nthe process succeeds, otherwise returns an error code from the\nOEOmegaReturnCode\nnamespace.\nClearFragLibs\n\uf0c1\nvoid\nClearFragLibs\n()\nClears all fraglibs from the",
     "source": "doc_1",
     "type": "documentation"
   },
   {
     "id": "doc_1_3",
-    "text": "# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.",
+    "text": "ClearFragLibs\n()\nClears all fraglibs from the\nOEOmega\nobject.\nGetOptions\n\uf0c1\nconst\nOEOmegaOptions\n&\nGetOptions\n()\nconst\nRetrieves a constant reference to the\nOEOmegaOptions\ninstance as currently set.\nSetOptions\n\uf0c1\nvoid\nSetOptions\n(\nconst\nOEOmegaOptions\n&\n)\nSets the structure generation options by passing in an\nOEOmegaOptions\ninstance.",
     "source": "doc_1",
     "type": "documentation"
   },
   {
-    "id": "doc_1_4",
-    "text": "# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nomegaOpts\n=\noeomega\n.\nOEOmegaOptions\n()\nomegaOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-rms\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-maxconfs\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.",
-    "source": "doc_1",
+    "id": "doc_2_0",
+    "text": "OEOmegaOptions\n\uf0c1\nclass\nOEOmegaOptions\n:\npublic\nOESystem\n::\nOEOptions\nSee also\nOEOmega\nclass\nCode Examples\nGenerating Conformers\nexample\nGenerating Densely Sampled Conformers\nexample\nGenerating Stereoisomers\nexample\nThere is a\nlist of suboption default values\nlater in this section.\nThe\nOEOmegaOptions\nclass defines the following public methods:\nGetConfFixOptions\nand\nSetConfFixOptions\nGetEnergyWindow\nand\nSetEnergyWindow\nGetIncludeInput\nand\nSetIncludeInput\nGetMaxConfs\nand\nSetMaxConfs",
+    "source": "doc_2",
     "type": "documentation"
   },
   {
-    "id": "doc_1_5",
-    "text": ",\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-useGPU\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nomegaOpts\n,\n\"Omega\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nomegaOpts\n.\nUpdateValues\n(\nopts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomegaOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):",
-    "source": "doc_1",
+    "id": "doc_2_1",
+    "text": "and\nSetIncludeInput\nGetMaxConfs\nand\nSetMaxConfs\nGetMolBuilderOptions\nand\nSetMolBuilderOptions\nGetSliceEnsembleOptions\nand\nSetSliceEnsembleOptions\nGetStrictStereo\nand\nSetStrictStereo\nGetTorDriveOptions\nand\nSetTorDriveOptions\nGetTorsionDrive\nand\nSetTorsionDrive\nGetWarts\nand\nSetWarts\nConstructors\n\uf0c1\nOEOmegaOptions\n(\nconst\nunsigned\nint\nsampling\n=\nOEOmegaSampling\n::\nClassic\n)\nOEOmegaOptions\n(\nconst\nOEOmegaOptions\n&\n)\nDefault and copy constructors.\noperator=\n\uf0c1\nOEOmegaOptions\n&\noperator\n=\n(\nconst",
+    "source": "doc_2",
     "type": "documentation"
   },
   {
-    "id": "doc_1_6",
-    "text": "()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)",
-    "source": "doc_1",
+    "id": "doc_2_2",
+    "text": "operator=\n\uf0c1\nOEOmegaOptions\n&\noperator\n=\n(\nconst\nOEOmegaOptions\n&\n)\nAssignment operator.\nGetConfFixOptions\n\uf0c1\nOEConfFixOptions\n&\nGetConfFixOptions\n()\nconst\nOEConfFixOptions\n&\nGetConfFixOptions\n()\nconst\nSee\nSetConfFixOptions\nmethod.\nGetEnergyWindow\n\uf0c1\ndouble\nGetEnergyWindow\n()\nconst\nSee\nSetEnergyWindow\nmethod.\nGetIncludeInput\n\uf0c1\nbool\nGetIncludeInput\n()\nconst\nSee\nSetIncludeInput\nmethod.\nGetMaxConfs\n\uf0c1\nunsigned\nGetMaxConfs\n()\nconst\nSee\nSetMaxConfs\nmethod.\nGetMolBuilderOptions\n\uf0c1\nOEMolBuilderOptions\n&",
+    "source": "doc_2",
     "type": "documentation"
   },
   {
-    "id": "doc_1_7",
-    "text": ":\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nsimple_omega.py\nGenerating a Single Conformer\n\uf0c1\nThe following code example is a simple example of how to generate a\nsingle conformer.\nSee also\nOEConformerBuilder\nclass\nListing 2: Generating a Single Conformer\n#!/usr/bin/env python",
-    "source": "doc_1",
+    "id": "doc_2_3",
+    "text": "GetMolBuilderOptions\n\uf0c1\nOEMolBuilderOptions\n&\nGetMolBuilderOptions\n()\nconst\nOEMolBuilderOptions\n&\nGetMolBuilderOptions\n()\nconst\nSee\nSetMolBuilderOptions\nmethod.\nGetSliceEnsembleOptions\n\uf0c1\nOESliceEnsembleOptions\n&\nGetSliceEnsembleOptions\n()\nconst\nOESliceEnsembleOptions\n&\nGetSliceEnsembleOptions\n()\nconst\nSee\nSetSliceEnsembleOptions\nmethod.\nGetStrictStereo\n\uf0c1\nbool\nGetStrictStereo\n()\nconst\nSee\nSetStrictStereo\nmethod.\nGetTorDriveOptions\n\uf0c1\nOETorDriveOptions\n&\nGetTorDriveOptions\n()\nconst",
+    "source": "doc_2",
     "type": "documentation"
   },
   {
-    "id": "doc_1_8",
+    "id": "doc_2_4",
+    "text": "\uf0c1\nOETorDriveOptions\n&\nGetTorDriveOptions\n()\nconst\nOETorDriveOptions\n&\nGetTorDriveOptions\n()\nconst\nSee\nSetTorDriveOptions\nmethod.\nGetTorsionDrive\n\uf0c1\nbool\nGetTorsionDrive\n()\nconst\nSee\nSetTorsionDrive\nmethod.\nGetWarts\n\uf0c1\nbool\nGetWarts\n()\nconst\nSee\nSetWarts\nmethod.\nSetConfFixOptions\n\uf0c1\nvoid\nSetConfFixOptions\n(\nconst\nOEConfFixOptions\n&\n)\nSets\noptions\nrelated to partially fixing conformers.\nSee also\nOEConfFixOptions\nclass\nSetEnergyWindow\n\uf0c1\nbool\nSetEnergyWindow\n(\nconst\ndouble\n)\nSee\nSetEnergyWindow",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_2_5",
+    "text": "(\nconst\ndouble\n)\nSee\nSetEnergyWindow\nmethod.\nDefault: 10.\nSetIncludeInput\n\uf0c1\nbool\nSetIncludeInput\n(\nconst\nbool\n)\nSets whether to pass the unmodified input structure into output conformer ensemble.\nIf true, the input conformers are appended at the beginning of the generated conformer ensemble.\nDefault: False.\nSetMaxConfs\n\uf0c1\nbool\nSetMaxConfs\n(\nconst\nunsigned\n)\nSee\nSetMaxConfs\nmethod.\nDefault: 200.\nSetMolBuilderOptions\n\uf0c1\nvoid\nSetMolBuilderOptions\n(\nconst\nOEMolBuilderOptions\n&\n)\nSets\noptions",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_2_6",
+    "text": "(\nconst\nOEMolBuilderOptions\n&\n)\nSets\noptions\nrelated to generating initial conformer.\nSee also\nOEMolBuilderOptions\nclass\nSetSliceEnsembleOptions\n\uf0c1\nvoid\nSetSliceEnsembleOptions\n(\nconst\nOESliceEnsembleOptions\n&\n)\nSets\noptions\nrelated to deduplicating generated ensemble.\nSee also\nOESliceEnsembleOptions\nclass\nSetStrictStereo\n\uf0c1\nbool\nSetStrictStereo\n(\nconst\nbool\n)\nSets whether conformer generation should fail if\nstereo is not specified\non the input molecules.\nDefault: True.\nSetTorDriveOptions\n\uf0c1\nvoid",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_2_7",
+    "text": "Default: True.\nSetTorDriveOptions\n\uf0c1\nvoid\nSetTorDriveOptions\n(\nconst\nOETorDriveOptions\n&\n)\nSets\noptions\nrelated to torsion driving for conformer generation.\nSee also\nOETorDriveOptions\nclass\nSetTorsionDrive\n\uf0c1\nbool\nSetTorsionDrive\n(\nconst\nbool\n)\nSets whether to perform torsion driving.\nDefault: True.\nSetWarts\n\uf0c1\nbool\nSetWarts\n(\nconst\nbool\n)\nSets whether to generate unique titles for conformers.\nDefault: False.\nSuboption Parameter Defaults\n\uf0c1",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_2_8",
+    "text": "Default: False.\nSuboption Parameter Defaults\n\uf0c1\nDefault values of the parameters from the suboption classes are compiled below.\nparameter\nDefault\nCanonOrder\nTrue\nEnumNitrogen\nOENitrogenEnumeration_Unspecified\nEnumRing\nTrue\nFromCT\nTrue\nIgnoreStereo\nFalse\nMaxEnumConfs\n1024\nSampleHydrogens\nFalse\nStrictAtomTypes\nTrue\nMaxTerminalHeavy\n0\nRangeIncrement\n5\nRMSThreshold\n0.5\nCommentEnergy\nFalse\nForceField\nOEMMFFSheffieldFFType_MMFF94Smod_NOESTAT\nMaxRotors\n9999\nMaxSearchTime\n120.0 sec\nRotorOffset\nFalse",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_2_9",
+    "text": "9999\nMaxSearchTime\n120.0 sec\nRotorOffset\nFalse\nSDEnergy\nFalse\nUseGPU\nTrue",
+    "source": "doc_2",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_0",
+    "text": "OEFlipperOptions\n\uf0c1\nclass\nOEFlipperOptions\n:\npublic\nOESystem\n::\nOEOptions\nSee also\nOEFlipper\nfunction\nCode Examples\nGenerating Stereoisomers\nexample\nThe\nOEFlipperOptions\nclass defines the following public methods:\nGetAtomPredicate\nand\nSetAtomPredicate\nGetBondPredicate\nand\nSetBondPredicate\nGetEnhancedStereo\nand\nSetEnhancedStereo\nGetEnumAtoms\nand\nSetEnumAtoms\nGetEnumAtomSpecifiedStereo\nand\nSetEnumAtomSpecifiedStereo\nGetEnumBonds\nand\nSetEnumBonds\nGetEnumBondSpecifiedStereo\nand",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_1",
+    "text": "and\nSetEnumBonds\nGetEnumBondSpecifiedStereo\nand\nSetEnumBondSpecifiedStereo\nGetEnumBridgehead\nand\nSetEnumBridgehead\nGetEnumEZ\nand\nSetEnumEZ\nGetEnumNitrogen\nand\nSetEnumNitrogen\nGetEnumRS\nand\nSetEnumRS\nGetEnumSpecifiedStereo\nand\nSetEnumSpecifiedStereo\nGetEnumRelativeAtomStereo\nand\nSetEnumRelativeAtomStereo\nGetMaxCenters\nand\nSetMaxCenters\nGetWarts\nand\nSetWarts\nConstructors\n\uf0c1\nOEFlipperOptions\n()\nOEFlipperOptions\n(\nconst\nOEFlipperOptions\n&\n)\nDefault and copy constructors.\noperator=\n\uf0c1\nOEFlipperOptions",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_2",
+    "text": "operator=\n\uf0c1\nOEFlipperOptions\n&\noperator\n=\n(\nconst\nOEFlipperOptions\n&\n)\nAssignment operator.\nGetAtomPredicate\n\uf0c1\nconst\nOESystem\n::\nOEUnaryPredicate\n<\nOEChem\n::\nOEAtomBase\n>*\nGetAtomPredicate\n()\nconst\nSee\nSetAtomPredicate\nmethod.\nGetBondPredicate\n\uf0c1\nconst\nOESystem\n::\nOEUnaryPredicate\n<\nOEChem\n::\nOEBondBase\n>*\nGetBondPredicate\n()\nconst\nSee\nSetBondPredicate\nmethod.\nGetEnhancedStereo\n\uf0c1\nbool\nGetEnhancedStereo\n()\nconst\nSee\nSetEnhancedStereo\nmethod.\nGetEnumAtoms\n\uf0c1\nbool\nGetEnumAtoms\n()\nconst\nSee",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_3",
+    "text": "GetEnumAtoms\n\uf0c1\nbool\nGetEnumAtoms\n()\nconst\nSee\nSetEnumAtoms\nmethod.\nGetEnumAtomSpecifiedStereo\n\uf0c1\nbool\nGetEnumAtomSpecifiedStereo\n()\nconst\nSee\nSetEnumAtomSpecifiedStereo\nmethod.\nGetEnumBonds\n\uf0c1\nbool\nGetEnumBonds\n()\nconst\nSee\nSetEnumBonds\nmethod.\nGetEnumBondSpecifiedStereo\n\uf0c1\nbool\nGetEnumBondSpecifiedStereo\n()\nconst\nSee\nSetEnumBondSpecifiedStereo\nmethod.\nGetEnumBridgehead\n\uf0c1\nbool\nGetEnumBridgehead\n()\nconst\nSee\nSetEnumBridgehead\nmethod.\nGetEnumEZ\n\uf0c1\nbool\nGetEnumEZ\n()\nconst\nSee\nSetEnumEZ\nmethod.",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_4",
+    "text": "\uf0c1\nbool\nGetEnumEZ\n()\nconst\nSee\nSetEnumEZ\nmethod.\nGetEnumNitrogen\n\uf0c1\nbool\nGetEnumNitrogen\n()\nconst\nSee\nSetEnumNitrogen\nmethod.\nGetEnumRS\n\uf0c1\nbool\nGetEnumRS\n()\nconst\nSee\nSetEnumRS\nmethod.\nGetEnumRelativeAtomStereo\n\uf0c1\nbool\nGetEnumRelativeAtomStereo\n()\nconst\nSee\nSetEnumRelativeAtomStereo\nmethod.\nGetEnumSpecifiedStereo\n\uf0c1\nbool\nGetEnumSpecifiedStereo\n()\nconst\nSee\nSetEnumSpecifiedStereo\nmethod.\nGetMaxCenters\n\uf0c1\nunsigned\nGetMaxCenters\n()\nconst\nSee\nSetMaxCenters\nmethod.\nGetWarts\n\uf0c1\nbool\nGetWarts\n()\nconst\nSee",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_5",
+    "text": "method.\nGetWarts\n\uf0c1\nbool\nGetWarts\n()\nconst\nSee\nSetWarts\nmethod.\nSetAtomPredicate\n\uf0c1\nbool\nSetAtomPredicate\n(\nconst\nOESystem\n::\nOEUnaryPredicate\n<\nOEChem\n::\nOEAtomBase\n>&\n)\nProvides an input atom predicate to define the selection of the atom stereocenters which should be enumerated.\nSetBondPredicate\n\uf0c1\nbool\nSetBondPredicate\n(\nconst\nOESystem\n::\nOEUnaryPredicate\n<\nOEChem\n::\nOEBondBase\n>&\n)\nProvides an input bond predicate to define the selection of the bond stereocenters which should be enumerated.",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_6",
+    "text": "SetEnhancedStereo\n\uf0c1\nbool\nSetEnhancedStereo\n(\nconst\nbool\n)\nSets whether to consider explicit MDL enhanced stereogroups during flipping or not.\nEnhanced stereogroups generally contain a collection of stereocenters which should be considered\nas a collective unit, where a \u2018flip\u2019 implies that all centers in the group should be flipped,\nthus retaining the relative stereo parity between the grouped stereocenters. With this flag enabled,",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_7",
+    "text": "far fewer enantiomers will be generated than for individual stereocenter flipping activities,\nand relative stereo configurations will be retained. When enabled, explicitly marked absolute\nstereocenters are excluded from the flipping activities. Care should be taken to ensure that any\ncustom atom predicate returns all atoms involved in enhanced stereogroups.\nDefault: False.\nNote\nThe membership and type of existing enhanced stereogroups are not modified as a result of the flipping operation.",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_8",
+    "text": "That is, explicit stereogroups of\nand\nand\nor\nare not promoted to\nabs\ngroups as a result of stereocenter parity flips.\nThis retains the source of original stereogroup(s) in the generated isomer(s) for post-flipping validations and processing.\nThis behavior is true regardless of the setting of\nGetEnhancedStereo\n.\nStereocenters can be explicitly promoted to\nabs\ncenters by deletion of all stereogroups, or deleting all stereogroups and\nadding marked stereocenters to a single new\nabs\nstereogroup.",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_9",
+    "text": "abs\nstereogroup.\nSee also\nGetGroups\nmethod\nOEIsMDLStereoGroup\nclass\nSetEnumAtoms\n\uf0c1\nbool\nSetEnumAtoms\n(\nconst\nbool\n)\nSets whether to include R/S stereocenters in the enumeration or not. If\nfalse\n,\ndisregards atom enumerations.\nDefault: True.\nSetEnumAtomSpecifiedStereo\n\uf0c1\nbool\nSetEnumAtomSpecifiedStereo\n(\nconst\nbool\n)\nSets whether to force the modification of all of the R/S stereocenters in a molecule or not. If\nfalse\n,",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_10",
+    "text": "false\n,\nwill only enumerate stereocenters which do not already have a specified stereochemistry.\nDefault: False.\nSetEnumBonds\n\uf0c1\nbool\nSetEnumBonds\n(\nconst\nbool\n)\nSets whether to include E/Z bonds in the enumeration or not. If\nfalse\n,\ndisregards bond enumerations.\nDefault: True.\nSetEnumBondSpecifiedStereo\n\uf0c1\nbool\nSetEnumBondSpecifiedStereo\n(\nconst\nbool\n)\nSets whether to force the modification of all of the E/Z stereocenters in a molecule or not. If\nfalse\n,",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_11",
+    "text": "false\n,\nwill only enumerate bonds which do not already have a specified stereochemistry.\nDefault: False.\nSetEnumBridgehead\n\uf0c1\nbool\nSetEnumBridgehead\n(\nconst\nbool\n)\nSets whether to enumerate bridgehead stereocenters or not.\nDefault: False.\nSetEnumEZ\n\uf0c1\nbool\nSetEnumEZ\n(\nconst\nbool\n)\nSets whether to enumerate E/Z stereocenters or not.\nDefault: True.\nSetEnumNitrogen\n\uf0c1\nbool\nSetEnumNitrogen\n(\nconst\nbool\n)",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_12",
+    "text": "\uf0c1\nbool\nSetEnumNitrogen\n(\nconst\nbool\n)\nControls the behavior with respect to enumeration of nonterminal nitrogens. Any nitrogen with pyramidal geometry in the initial model of\nthe input molecule, and having no more than two ring bonds is considered to be \u2018invertible\u2019. Will enumerate all possible puckers if set to\ntrue\n.\nDefault: False.\nSetEnumRS\n\uf0c1\nbool\nSetEnumRS\n(\nconst\nbool\n)\nSets whether to enumerate R/S stereocenters or not.\nDefault: True.\nSetEnumRelativeAtomStereo\n\uf0c1\nbool",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_13",
+    "text": "Default: True.\nSetEnumRelativeAtomStereo\n\uf0c1\nbool\nSetEnumRelativeAtomStereo\n(\nconst\nbool\n)\nSets whether to include enumeration of internally perceived relative atom stereocenters (e.g., 1,4-disubstituted cyclohexanes) in a molecule or not.\nIf\ntrue\n, consider relative stereocenters during stereoenumeration.\nDefault: False.\nSetEnumSpecifiedStereo\n\uf0c1\nbool\nSetEnumSpecifiedStereo\n(\nconst\nbool\n)\nSets whether to force the modification of all of the atom and bond stereocenters in a molecule or not. If",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_3_14",
+    "text": "false\n,\nwill only enumerate stereocenters which do not already have a specified stereochemistry.\nDefault: False.\nSetMaxCenters\n\uf0c1\nbool\nSetMaxCenters\n(\nconst\nunsigned\n)\nSets the maximum number of stereocenters or groups of stereocenters which will be fully enumerated.\nDefault: 12.\nSetWarts\n\uf0c1\nbool\nSetWarts\n(\nconst\nbool\n)\nSets whether to generate unique titles for molecules.\nDefault: False.",
+    "source": "doc_3",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_4_0",
+    "text": "OEOmegaReturnCode\n\uf0c1\nThis namespace contains constants that are returned by various\nmethods in\nOmega TK\nto indicate the outcome.\nSuccess\nMethod returned successfully.\nMissingFFParams\nForce field setup failed due to missing parameters.\nExplicitHydrogens\nFailed to add explicit hydrogens.\nInvalidOptions\nFailed due to invalid options.\nNo3DFromCT\nMolecule must be 3 dimensional when fromCT is set to false.\nTooManyRotors\nMaximum number of rotors exceeded.\nUnspecifiedStereo",
+    "source": "doc_4",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_4_1",
+    "text": "UnspecifiedStereo\nFailed due to unspecified stereochemistry.\nFailedCTBuild\nFailed to build structure from connection table (CT).\nFailedTorDrive\nFailed to complete torsion driving.\nExceedsAtomDegree4\nContains atom with degree greater than 4.\nFailedDupSetup\nDuplicate removal setup failed.\nFailedDGConfGen\nUnable to generate 3D conformer.\nFailedTorAssign\nTorsion assignment failed.\nFailedSmartMatch\nUnable to match SMARTS.\nFailedFixMatch\nFixfile match failed.\nNoFixedFragment\nNo fixed fragment found.",
+    "source": "doc_4",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_4_2",
+    "text": "NoFixedFragment\nNo fixed fragment found.\nNoValidConfs\nNo valid conformers generated.\nNo3DTorDrive\nInput must be 3 dimensional for torsion driving.\nFailedCharges\nFailed to assign partial charges.\nFailed\nMethod failed.",
+    "source": "doc_4",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_5_0",
+    "text": "OEOmegaSampling\n\uf0c1\nThis namespace contains constants that are used with\nOEOmegaOptions\nto control the\ndefaults to be set for omega options. Different sets of default options\nprepares omega to generate structures that are optimal for different\nusages.\nCode Examples\nGenerating Densely Sampled Conformers\nexample\nClassic\nOptions to generate a set of conformers representing a gas phase ensemble.\nDense\nOptions to generate a dense set of conformers optimal for FreeFormConf usage.\nCaution",
+    "source": "doc_5",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_5_1",
+    "text": "Caution\nGPU-Omega is not compatible with the dense mode default force field. To\nenable GPU-Omega and utilize a GPU set\nOETorDriveOptions.SetForceField\nto\nOEMMFFSheffieldFFType_MMFF94Smod_NOESTAT\nPose\nOptions to generate a set of conformers suitable for molecular alignment\nand pose prediction by docking.\nROCS\nOptions to generate a set of conformers suitable for ROCS usage.\nFastROCS\nOptions to generate a sparse set of conformers suitable for FastROCS usage.",
+    "source": "doc_5",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_5_2",
+    "text": "Options overridden by various modes from the default\nOEOmegaSampling_Classic\nmode:\nOption\nClassic\nDense\nPose\nROCS\nFastROCS\nRangeIncrement\n8\nMaxConfs\n200\n20000\n200, 800\n50\n10\nStrictStereo\nTrue\nFalse\nMaxSearchTime\n120.0\n3600.0\nEnergyWindow\n10.0\n15.0\nRMSThreshold\n0.5\n0.3\nEnumNitrogen\nOENitrogenEnumeration_Unspecified\nOENitrogenEnumeration_All\nSampleHydrogens\nFalse\nTrue\nSearchForceField\nmmff94smod_NoEstat\nmmff94s_Sheff\nFragBuilderOptions\nFast\nDense",
+    "source": "doc_5",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_0",
+    "text": "OMEGA Examples\n\uf0c1\nThe following table lists the currently available\nOmega TK\nexamples:\nProgram\nDescription\nsimple_omega.py\ngenerating conformers\nsingle_conformer.py\ngenerating a single conformer\ndens_omega.py\ngenerating densely sampled conformers\nstereo_and_torsion.py\ngenerating stereoisomers\ntorsion_drive.py\ntorsion driving to generating conformer ensemble\nmake_fraglib.py\nmaking fragment library\nmacrocycle.py\ngenerating macrocycle conformers\nsingle_conf_macrocycle.py",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_1",
+    "text": "single_conf_macrocycle.py\ngenerating single macrocycle conformer\nNote\nIf the input molecule has SD tag data, the data will be copied to every conformer in the results molecule.\nClassic OEOmega Examples\n\uf0c1\nGenerating Conformers\n\uf0c1\nThe following code example is a simple example of how to generate conformers\nusing the\nOEOmega\nobject.\nSee also\nOEOmegaOptions\nclass\nOEOmega\nclass\nOESimpleAppOptions\nclass\nListing 1: Generating Conformers\n#!/usr/bin/env python",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_2",
     "text": "#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_9",
+    "id": "doc_6_3",
     "text": "# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_10",
+    "id": "doc_6_4",
+    "text": "# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nomegaOpts\n=\noeomega\n.\nOEOmegaOptions\n()\nomegaOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-rms\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-maxconfs\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_5",
+    "text": ",\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-useGPU\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nomegaOpts\n,\n\"Omega\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nomegaOpts\n.\nUpdateValues\n(\nopts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomegaOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_6",
+    "text": "()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_7",
+    "text": ":\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nsimple_omega.py\nGenerating a Single Conformer\n\uf0c1\nThe following code example is a simple example of how to generate a\nsingle conformer.\nSee also\nOEConformerBuilder\nclass\nListing 2: Generating a Single Conformer\n#!/usr/bin/env python",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_8",
+    "text": "#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_9",
+    "text": "# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.",
+    "source": "doc_6",
+    "type": "documentation"
+  },
+  {
+    "id": "doc_6_10",
     "text": "# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nif\nlen\n(\nargv\n)\n!=\n3\n:\noechem\n.\nOEThrow\n.\nUsage\n(\n\"\n%s\n<infile> <outfile>\"\n%\nargv\n[\n0\n])\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nargv\n[\n1\n]):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nargv\n[\n2\n]):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nargv\n[\n2\n])\nif\nnot\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_11",
+    "id": "doc_6_11",
     "text": "%s\nfor writing\"\n%\nargv\n[\n2\n])\nif\nnot\noechem\n.\nOEIs3DFormat\n(\nofs\n.\nGetFormat\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Invalid output file format for 3D coordinates!\"\n)\nbuilder\n=\noeomega\n.\nOEConformerBuilder\n()\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\nbuilder\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_12",
+    "id": "doc_6_12",
     "text": "(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nsingle_conformer.py\nGenerating Densely Sampled Conformers\n\uf0c1\nThe following code example is a simple example of how to generate densely sampled\nconformers, as used in\nOEFreeFormConf\ncalculations, using the\nOEOmega\nobject.\nSee also\nOEOmegaOptions\nclass\nOEOmega\nclass\nOEOmegaSampling\nnamespace\nOESimpleAppOptions\nclass",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_13",
+    "id": "doc_6_13",
     "text": "namespace\nOESimpleAppOptions\nclass\nListing 3: Generating Densely Sampled Conformers\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_14",
+    "id": "doc_6_14",
     "text": "# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_15",
+    "id": "doc_6_15",
     "text": "# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nomegaOpts\n=\noeomega\n.\nOEOmegaOptions\n(\noeomega\n.\nOEOmegaSampling_Dense\n)\nomegaOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-rms\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_16",
+    "id": "doc_6_16",
     "text": "\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-maxconfs\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-useGPU\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-searchFF\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nomegaOpts\n,\n\"Omega\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_17",
+    "id": "doc_6_17",
     "text": "(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nomegaOpts\n.\nUpdateValues\n(\nopts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomegaOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_18",
+    "id": "doc_6_18",
     "text": "())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\ndense_omega.py\nFlipper Examples\n\uf0c1\nGenerating Stereoisomers\n\uf0c1",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_19",
+    "id": "doc_6_19",
     "text": "Flipper Examples\n\uf0c1\nGenerating Stereoisomers\n\uf0c1\nThe following code example is a simple example of how to use the\nOEFlipper\nfunction to generate stereoisomers. The\ncode example also demonstrates that stereoisomers should be generated\nbefore generating conformers.\nSee also\nOEOmegaOptions\nclass\nOEOmega\nclass\nOEFlipper\nfunction\nOESimpleAppOptions\nclass\nListing 4: Generating Stereoisomers\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_20",
+    "id": "doc_6_20",
     "text": "# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_21",
+    "id": "doc_6_21",
     "text": "# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_22",
+    "id": "doc_6_22",
     "text": "openeye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nflipperOpts\n=\noeomega\n.\nOEFlipperOptions\n()\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nflipperOpts\n,\n\"stereo_and_torsion\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nflipperOpts\n.\nUpdateValues\n(\nopts\n)\nomega\n=\noeomega\n.\nOEOmega\n()\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_23",
+    "id": "doc_6_23",
     "text": "()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nfor\nenantiomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n.\nGetActive\n(),\nflipperOpts\n):\nfmol\n=\noechem\n.\nOEMol\n(\nenantiomer\n)\nret_code\n=",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_24",
+    "id": "doc_6_24",
     "text": "fmol\n=\noechem\n.\nOEMol\n(\nenantiomer\n)\nret_code\n=\nomega\n.\nBuild\n(\nfmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nfmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nfmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nstereo_and_torsion.py\nGenerating Torsion Driven Conformation Examples\n\uf0c1\nTorsion Driving to Generating Conformer Ensemble\n\uf0c1",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_25",
+    "id": "doc_6_25",
     "text": "\uf0c1\nThe following code example is a simple example of how to torsion\ndrive from given 3D structure, to generate a conformer ensemble.\nSee also\nOETorDriveOptions\nclass\nOETorDriver\nclass\nOESimpleAppOptions\nclass\nListing 5: Torsion Driving to Generating Conformer Ensemble\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_26",
+    "id": "doc_6_26",
     "text": "# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_27",
+    "id": "doc_6_27",
     "text": "# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\ntorOpts\n=\noeomega\n.\nOETorDriveOptions",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_28",
+    "id": "doc_6_28",
     "text": "]):\ntorOpts\n=\noeomega\n.\nOETorDriveOptions\n()\ntorOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\ntorOpts\n.\nSetParameterVisibility\n(\n\"-rms\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\ntorOpts\n.\nSetParameterVisibility\n(\n\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\ntorOpts\n.\nSetParameterVisibility\n(\n\"-maxconfs\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\ntorOpts\n,\n\"Omega\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_29",
+    "id": "doc_6_29",
     "text": ",\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\ntorOpts\n.\nUpdateValues\n(\nopts\n)\ntordriver\n=\noeomega\n.\nOETorDriver\n(\ntorOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_30",
+    "id": "doc_6_30",
     "text": "oechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\ntordriver\n.\nGenerateConfs\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_31",
+    "id": "doc_6_31",
     "text": "==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\ntorsion_drive.py\nFragment Library generation Examples\n\uf0c1\nMaking Fragment Library\n\uf0c1\nThe following code example is a simple example of how to generate\na fragment library.\nSee also\nOEFragBuilderOptions\nclass\nOEMakeFragLib\nclass\nOESimpleAppOptions\nclass\nListing 6: Making Fragment Library\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_32",
+    "id": "doc_6_32",
     "text": "# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_33",
+    "id": "doc_6_33",
     "text": "# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_34",
+    "id": "doc_6_34",
     "text": "openeye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nlibOpts\n=\noeomega\n.\nOEFragBuilderOptions\n()\nlibOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nlibOpts\n.\nSetParameterVisibility\n(\n\"-buildFF\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nlibOpts\n,\n\"Makefraglib\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_35",
+    "id": "doc_6_35",
     "text": "(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nlibOpts\n.\nUpdateValues\n(\nopts\n)\nmakefraglib\n=\noeomega\n.\nOEMakeFragLib\n(\nlibOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nif\nofs\n.\nGetFormat\n()\n!=\noechem",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_36",
+    "id": "doc_6_36",
     "text": ".\nGetOutFile\n())\nif\nofs\n.\nGetFormat\n()\n!=\noechem\n.\nOEFormat_OEB\n:\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Output file has to have OEB format!\"\n)\nmakefraglib\n.\nClearFragLibs\n()\nmakefraglib\n.\nGenerateMissingFrags\n(\nifs\n,\nofs\n)\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nmake_fraglib.py\nMacrocycle Examples\n\uf0c1\nGenerating Macrocycle Conformers\n\uf0c1\nThe following code example is a simple example of how to generate conformers\nusing the OEMacrocycleOmega object.\nSee also",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_37",
+    "id": "doc_6_37",
     "text": "using the OEMacrocycleOmega object.\nSee also\nOEMacrocycleOmegaOptions\nclass\nOEMacrocycleOmega\nclass\nOESimpleAppOptions\nclass\nListing 7: Generating Macrocycle Conformers\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_38",
+    "id": "doc_6_38",
     "text": "# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then\n# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_39",
+    "id": "doc_6_39",
     "text": "# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nomegaOpts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nomegaOpts\n.\nSetParameterVisibility\n(\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_40",
+    "id": "doc_6_40",
     "text": "()\nomegaOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-rms\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-ewindow\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nomegaOpts\n.\nSetParameterVisibility\n(\n\"-maxconfs\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nomegaOpts\n,\n\"Omega\"\n,\noechem\n.\nOEFileStringType_Mol\n,\noechem\n.\nOEFileStringType_Mol3D\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_41",
+    "id": "doc_6_41",
     "text": ")\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nomegaOpts\n.\nUpdateValues\n(\nopts\n)\nmcomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nomegaOpts\n)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_42",
+    "id": "doc_6_42",
     "text": "%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nret_code\n=\nmcomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nmacrocycle.py",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_43",
+    "id": "doc_6_43",
     "text": "main\n(\nsys\n.\nargv\n))\nDownload code\nmacrocycle.py\nGenerating a Single Macrocycle Conformer\n\uf0c1\nThe following code example is a simple example of how to generate a\nsingle macrocycle conformer using the OEMacrocycleBuilder object.\nSee also\nOEMacrocycleBuilderOptions\nclass\nOEMacrocycleBuilder\nclass\nOESimpleAppOptions\nclass\nListing 8: Generating a Single Macrocycle Conformer\n#!/usr/bin/env python\n# (C) 2022 Cadence Design Systems, Inc. (Cadence)\n# All rights reserved.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_44",
+    "id": "doc_6_44",
     "text": "# All rights reserved.\n# TERMS FOR USE OF SAMPLE CODE The software below (\"Sample Code\") is\n# provided to current licensees or subscribers of Cadence products or\n# SaaS offerings (each a \"Customer\").\n# Customer is hereby permitted to use, copy, and modify the Sample Code,\n# subject to these terms. Cadence claims no rights to Customer's\n# modifications. Modification of Sample Code is at Customer's sole and\n# exclusive risk. Sample Code may require Customer to have a then",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_45",
+    "id": "doc_6_45",
     "text": "# current license or subscription to the applicable Cadence offering.\n# THE SAMPLE CODE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n# EXPRESS OR IMPLIED. OPENEYE DISCLAIMS ALL WARRANTIES, INCLUDING, BUT\n# NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY, FITNESS FOR A\n# PARTICULAR PURPOSE AND NONINFRINGEMENT. In no event shall Cadence be\n# liable for any damages or liability in connection with the Sample Code\n# or its use.\nimport\nsys\nfrom\nopeneye\nimport\noechem\nfrom\nopeneye\nimport\noeomega",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_46",
+    "id": "doc_6_46",
     "text": "openeye\nimport\noechem\nfrom\nopeneye\nimport\noeomega\ndef\nmain\n(\nargv\n=\n[\n__name__\n]):\nbuildOpts\n=\noeomega\n.\nOEMacrocycleBuilderOptions\n()\nbuildOpts\n.\nSetParameterVisibility\n(\noechem\n.\nOEParamVisibility_Hidden\n)\nbuildOpts\n.\nSetParameterVisibility\n(\n\"-seed\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\nbuildOpts\n.\nSetParameterVisibility\n(\n\"-dielectric_constant\"\n,\noechem\n.\nOEParamVisibility_Simple\n)\ninType\n=\noechem\n.\nOEFileStringType_Mol\noutType\n=\noechem\n.\nOEFileStringType_Mol3D\nopts\n=\noechem\n.",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_47",
+    "id": "doc_6_47",
     "text": "=\noechem\n.\nOEFileStringType_Mol3D\nopts\n=\noechem\n.\nOESimpleAppOptions\n(\nbuildOpts\n,\n\"macrocycle_builder\"\n,\ninType\n,\noutType\n)\nif\noechem\n.\nOEConfigureOpts\n(\nopts\n,\nargv\n,\nFalse\n)\n==\noechem\n.\nOEOptsConfigureStatus_Help\n:\nreturn\n0\nbuildOpts\n.\nUpdateValues\n(\nopts\n)\n#builder = oeomega.OEMacrocycleBuilder(buildOpts)\nifs\n=\noechem\n.\noemolistream\n()\nif\nnot\nifs\n.\nopen\n(\nopts\n.\nGetInFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor reading\"\n%\nopts\n.\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_48",
+    "id": "doc_6_48",
     "text": ".\nGetInFile\n())\nofs\n=\noechem\n.\noemolostream\n()\nif\nnot\nofs\n.\nopen\n(\nopts\n.\nGetOutFile\n()):\noechem\n.\nOEThrow\n.\nFatal\n(\n\"Unable to open\n%s\nfor writing\"\n%\nopts\n.\nGetOutFile\n())\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\noechem\n.\nOEThrow\n.\nInfo\n(\n\"Title:\n%s\n\"\n%\nmol\n.\nGetTitle\n())\nitlimit\n=\n1000\nitnum\n=\n0\nret_code\n=\noeomega\n.\nOEOmegaReturnCode_Failed\nwhile\nitnum\n<=\nitlimit\n:\nbuilder\n=\noeomega\n.\nOEMacrocycleBuilder\n(\nbuildOpts\n)\nret_code\n=\nbuilder\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   },
   {
-    "id": "doc_1_49",
+    "id": "doc_6_49",
     "text": "ret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nbreak\nelse\n:\nbuildOpts\n.\nSetRandomSeed\n(\nbuildOpts\n.\nGetRandomSeed\n()\n+\n1\n)\n++\nitnum\nif\nret_code\n!=\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEThrow\n.\nWarning\n(\n\"\n%s\n:\n%s\n\"\n%\n(\nmol\n.\nGetTitle\n(),\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)))\nreturn\n0\nif\n__name__\n==\n\"__main__\"\n:\nsys\n.\nexit\n(\nmain\n(\nsys\n.\nargv\n))\nDownload code\nsingle_conf_macrocycle.py",
-    "source": "doc_1",
+    "source": "doc_6",
     "type": "documentation"
   }
 ]

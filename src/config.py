@@ -38,8 +38,12 @@ OPENAI_MODEL = "gpt-4o-mini"
 # Documentation URLs to scrape
 DOC_URLS = [
     "https://docs.eyesopen.com/toolkits/python/omegatk/index.html",
-    "https://docs.eyesopen.com/toolkits/python/omegatk/OEOmegaClasses/OEOmega.html",
-    "https://docs.eyesopen.com/toolkits/python/omegatk/OEOmegaClasses/OEOmegaOptions.html",
-    "https://docs.eyesopen.com/toolkits/python/omegatk/OEOmegaClasses/OEFlipperOptions.html",
+    # Class references (corrected: OEConfGenClasses, not OEOmegaClasses)
+    "https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEOmega.html",
+    "https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEOmegaOptions.html",
+    "https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenClasses/OEFlipperOptions.html",
+    # Constants pages — sampling modes and return codes
+    "https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenConstants/OEOmegaReturnCode.html",
+    "https://docs.eyesopen.com/toolkits/python/omegatk/OEConfGenConstants/OEOmegaSampling.html",
     "https://docs.eyesopen.com/toolkits/python/omegatk/omegaexamples.html",
 ]

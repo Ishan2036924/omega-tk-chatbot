@@ -1,0 +1,46 @@
+OEOmegaReturnCode
+
+This namespace contains constants that are returned by various
+methods in
+Omega TK
+to indicate the outcome.
+Success
+Method returned successfully.
+MissingFFParams
+Force field setup failed due to missing parameters.
+ExplicitHydrogens
+Failed to add explicit hydrogens.
+InvalidOptions
+Failed due to invalid options.
+No3DFromCT
+Molecule must be 3 dimensional when fromCT is set to false.
+TooManyRotors
+Maximum number of rotors exceeded.
+UnspecifiedStereo
+Failed due to unspecified stereochemistry.
+FailedCTBuild
+Failed to build structure from connection table (CT).
+FailedTorDrive
+Failed to complete torsion driving.
+ExceedsAtomDegree4
+Contains atom with degree greater than 4.
+FailedDupSetup
+Duplicate removal setup failed.
+FailedDGConfGen
+Unable to generate 3D conformer.
+FailedTorAssign
+Torsion assignment failed.
+FailedSmartMatch
+Unable to match SMARTS.
+FailedFixMatch
+Fixfile match failed.
+NoFixedFragment
+No fixed fragment found.
+NoValidConfs
+No valid conformers generated.
+No3DTorDrive
+Input must be 3 dimensional for torsion driving.
+FailedCharges
+Failed to assign partial charges.
+Failed
+Method failed.

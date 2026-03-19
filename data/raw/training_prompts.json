@@ -126,5 +126,25 @@
   {
     "question": "Retrieve Missing Fragments from fragment library in Omega",
     "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nmake_lib = oeomega.OEMakeFragLib()\nmake_lib.AddFragLib()\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nfor mol in make_lib.GetMissingFrags(ifs):\n    oechem.OEWriteMolecule(ofs,mol)\n\nofs.close()"
+  },
+  {
+    "question": "Generate conformers for a database of macrocycle molecules with OEMacrocycleOmega",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nomega = oeomega.OEMacrocycleOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Filter a molecule database for macrocycles and generate conformers only for macrocycles",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nomega = oeomega.OEMacrocycleOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    if not oeomega.OEIsMacrocycle(mol):\n        continue\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate macrocycle conformers with a maximum number of conformers set",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMaxConfs(200)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Route molecules through the correct Omega engine — standard Omega for small molecules, OEMacrocycleOmega for macrocycles",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nstd_opts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nstd_omega = oeomega.OEOmega(std_opts)\n\nmc_opts = oeomega.OEMacrocycleOmegaOptions()\nmc_omega = oeomega.OEMacrocycleOmega(mc_opts)\n\nfor mol in ifs.GetOEMols():\n    if oeomega.OEIsMacrocycle(mol):\n        ret_code = mc_omega.Build(mol)\n    else:\n        ret_code = std_omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs,mol)\n    else:\n        print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
+  },
+  {
+    "question": "Generate macrocycle conformers in aqueous solution using OEMacrocycleOmega with water dielectric constant",
+    "code": "from openeye import oechem,oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs,mol)\n\n# Water dielectric constant = 80.0 (default is vacuum ~1.0)\nmc_builder_opts = oeomega.OEMacrocycleBuilderOptions()\nmc_builder_opts.SetDielectricConst(80.0)\n\nopts = oeomega.OEMacrocycleOmegaOptions()\nopts.SetMacrocycleBuilderOptions(mc_builder_opts)\n\nomega = oeomega.OEMacrocycleOmega(opts)\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs,mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()"
   }
 ]
