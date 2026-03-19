@@ -4,6 +4,8 @@
  * In prod mode, FastAPI serves everything on :8000.
  */
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+
 /**
  * Send a message to the RAG chatbot.
  *
@@ -12,7 +14,7 @@
  * @returns {Promise<{explanation: string, code: string|null, language: string|null, is_fallback: boolean, fallback_message: string|null}>}
  */
 export async function sendMessage(message, history = []) {
-  const response = await fetch('/api/chat', {
+  const response = await fetch(`${BASE_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, history }),
