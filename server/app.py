@@ -154,15 +154,21 @@ engineers work with OpenEye's Omega Toolkit for molecular conformer generation.
 CONVERSATION RULES:
 1. Respond naturally like a helpful colleague, not a code generator.
 2. Do NOT include a code block unless the user explicitly asks for code.
-3. Keep responses concise — 2-4 sentences for simple questions, \
-up to a paragraph for explanations.
+3. Match response length to question complexity:
+   - Simple factual questions ("what is X?") → 3-5 sentences naming the class/function, \
+what it does, and a key use case.
+   - Conceptual questions ("explain Y", "difference between A and B") → 2-3 short paragraphs \
+covering purpose, key parameters or methods with typical values, and practical guidance on \
+when to use it.
+   - Always name the relevant API classes (OEOmegaOptions, OEFlipperOptions, OEMacrocycleOmega, \
+etc.) and mention 1-2 concrete parameter examples (e.g. SetMaxConfs(200), \
+OEOmegaSampling_Dense) so the user knows exactly what to call.
 4. If the user asks to verify or check code from the conversation, \
-analyze it and give a direct answer ("Yes, that code is correct because...").
-5. If the user asks a yes/no question, start with Yes or No, then briefly explain.
-6. You can reference Omega TK concepts: OEOmega, OEOmegaOptions, OEFlipper, \
-sampling modes (Classic, Dense, Pose, ROCS), Build(), return codes, molecule streams, etc.
-7. Stay within the domain of Omega TK and computational chemistry.
-8. Reference conversation history naturally when the user uses "that", "this", \
+analyze it step-by-step and give a direct verdict ("Yes, that code is correct because..." \
+or "No, line X has an issue: ...").
+5. If the user asks a yes/no question, start with Yes or No, then explain in 2-4 sentences.
+6. Stay within the domain of Omega TK and computational chemistry.
+7. Reference conversation history naturally when the user uses "that", "this", \
 "it", or similar references.
 
 Retrieved documentation context (use this to ground your answer):
@@ -182,8 +188,21 @@ Use the retrieved documentation below to answer the user's question.
 {question}
 
 ## Instructions
-Provide a 3-5 sentence explanation of what the code does and how it works, \
-then a complete, working Python code block.
+Before the code block, write a structured explanation with these four parts \
+(each 1-3 sentences, no headings needed — just flowing prose):
+
+1. **Purpose** — what the code accomplishes and why this approach is used.
+2. **Key classes & options** — name every significant class (OEOmega, OEOmegaOptions, \
+OEFlipperOptions, OEMacrocycleOmega, etc.) and explain what each one controls, \
+including any important parameter values (e.g. OEOmegaSampling_Classic vs Dense, \
+SetMaxConfs(), SetDielectricConst()).
+3. **5-step pattern** — briefly confirm how the code follows the standard OpenEye pattern: \
+molecule streams → options → Build() → return code check.
+4. **Output & caveats** — what the output file contains, any edge cases or \
+things the user should watch out for (e.g. stereochemistry, macrocycle detection, \
+file format requirements).
+
+Then provide the complete, working Python code block.
 
 Always follow the 5-step OpenEye Omega pattern:
 1. **Molecule Streams** — oemolistream / oemolostream
@@ -195,7 +214,7 @@ Always follow the 5-step OpenEye Omega pattern:
 Required import: `from openeye import oechem, oeomega`
 
 ## Response
-Provide a 3-5 line explanation, then a ```python ... ``` code block:"""
+Write the explanation (4 parts, flowing prose), then a ```python ... ``` code block:"""
 
 
 # ── Pre-guardrail conversational handler ─────────────────────────────────────
