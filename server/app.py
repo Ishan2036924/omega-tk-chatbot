@@ -148,6 +148,80 @@ def _response_text(response: "ChatResponse") -> str:
     return "\n\n".join(parts)
 
 
+# ── Knowledge base helpers ────────────────────────────────────────────────────
+
+def _chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> list[str]:
+    """Simple recursive character text splitter."""
+    text = text.strip()
+    if not text:
+        return []
+    if len(text) <= chunk_size:
+        return [text]
+    chunks: list[str] = []
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        if end < len(text):
+            for sep in ["\n\n", "\n", ". ", " "]:
+                idx = text.rfind(sep, start + overlap, end)
+                if idx > start:
+                    end = idx + len(sep)
+                    break
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        start = max(start + 1, end - overlap)
+    return chunks
+
+
+def _embed_text(text: str) -> list[float]:
+    """Embed text using text-embedding-3-small (same model as FAISS index)."""
+    response = _generator.client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text[:8000],
+    )
+    return response.data[0].embedding
+
+
+def _cosine_sim(a: list[float], b: list[float]) -> float:
+    """Cosine similarity between two embedding vectors."""
+    import numpy as np
+    a_arr = np.array(a, dtype=float)
+    b_arr = np.array(b, dtype=float)
+    norm = float(np.linalg.norm(a_arr) * np.linalg.norm(b_arr))
+    return float(np.dot(a_arr, b_arr) / norm) if norm > 0 else 0.0
+
+
+def _retrieve_knowledge(query: str, session_id: str, top_k: int = 3, threshold: float = 0.25) -> list[dict]:
+    """Retrieve relevant user-uploaded knowledge chunks via in-Python cosine similarity."""
+    sb = _get_supabase()
+    if sb is None or _generator is None:
+        return []
+    try:
+        rows = (
+            sb.table("knowledge_chunks")
+            .select("id, source, text, embedding")
+            .eq("session_id", session_id)
+            .execute()
+            .data
+        )
+        if not rows:
+            return []
+        query_emb = _embed_text(query)
+        scored = []
+        for r in rows:
+            emb = r.get("embedding")
+            if isinstance(emb, list) and emb:
+                sim = _cosine_sim(query_emb, emb)
+                if sim >= threshold:
+                    scored.append({"text": r["text"], "source": r["source"], "score": sim})
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        return scored[:top_k]
+    except Exception as exc:
+        logger.warning("Knowledge retrieval failed: %s", exc)
+        return []
+
+
 # ── File extraction helpers ────────────────────────────────────────────────────
 
 def _extract_pdf_text(content: bytes) -> str:
@@ -815,26 +889,60 @@ def analytics_endpoint():
 
         recent = [
             {
-                "timestamp": r.get("created_at", ""),
-                "message":   (r.get("message") or "")[:60],
-                "intent":    r.get("intent", "—"),
+                "session_id":  r.get("session_id", ""),
+                "timestamp":   r.get("created_at", ""),
+                "message":     (r.get("message") or "")[:60],
+                "intent":      r.get("intent", "—"),
                 "is_fallback": r.get("is_fallback", False),
                 "has_code":    r.get("has_code", False),
                 "latency_ms":  r.get("latency_ms", 0),
+                "feedback":    {"up": 0, "down": 0},  # filled in after feedback query
             }
             for r in rows[:20]
         ]
+
+        # ── Feedback stats ────────────────────────────────────────────────────
+        feedback_data = {"total_helpful": 0, "total_not_helpful": 0, "helpful_rate": None, "feedback_by_session": {}}
+        try:
+            fb_rows = sb.table("feedback").select("session_id, feedback").execute().data
+            total_helpful    = sum(1 for r in fb_rows if r.get("feedback") == "up")
+            total_not_helpful = sum(1 for r in fb_rows if r.get("feedback") == "down")
+            total_fb = total_helpful + total_not_helpful
+            helpful_rate = round(total_helpful / total_fb * 100) if total_fb > 0 else None
+            fb_by_session: dict[str, dict] = {}
+            for r in fb_rows:
+                sid = r.get("session_id")
+                fb  = r.get("feedback")
+                if sid:
+                    if sid not in fb_by_session:
+                        fb_by_session[sid] = {"up": 0, "down": 0}
+                    if fb in ("up", "down"):
+                        fb_by_session[sid][fb] += 1
+            feedback_data = {
+                "total_helpful": total_helpful,
+                "total_not_helpful": total_not_helpful,
+                "helpful_rate": helpful_rate,
+                "feedback_by_session": fb_by_session,
+            }
+            # Annotate recent queries with per-session feedback
+            for q in recent:
+                qsid = q.get("session_id", "")
+                q["feedback"] = fb_by_session.get(qsid, {"up": 0, "down": 0})
+        except Exception as fb_exc:
+            logger.warning("Feedback analytics failed: %s", fb_exc)
 
         return {
             "total_queries": total, "code_requests": code_req,
             "guardrail_blocks": blocks, "avg_latency": avg_lat,
             "hourly_counts": hourly, "recent_queries": recent,
+            **feedback_data,
         }
     except Exception as exc:
         logger.error("Analytics error: %s", exc)
         return {"error": str(exc), "total_queries": 0, "code_requests": 0,
                 "guardrail_blocks": 0, "avg_latency": 0,
-                "hourly_counts": [], "recent_queries": []}
+                "hourly_counts": [], "recent_queries": [],
+                "total_helpful": 0, "total_not_helpful": 0, "helpful_rate": None}
 
 
 # ── Transcription endpoint ────────────────────────────────────────────────────
@@ -856,6 +964,168 @@ async def transcribe_endpoint(audio: UploadFile = File(...)):
         return {"text": result.text}
     except Exception as exc:
         logger.error("Transcribe error: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── History endpoint ─────────────────────────────────────────────────────────
+
+@app.get("/api/history/{session_id}")
+def history_endpoint(session_id: str):
+    """Return stored chat history for a session (ASC order)."""
+    sb = _get_supabase()
+    if sb is None:
+        return []
+    try:
+        rows = (
+            sb.table("chat_history")
+            .select("role, content, created_at")
+            .eq("session_id", session_id)
+            .order("created_at", desc=False)
+            .execute()
+            .data
+        )
+        return rows
+    except Exception as exc:
+        logger.warning("History load failed: %s", exc)
+        return []
+
+
+# ── Knowledge base endpoints ──────────────────────────────────────────────────
+
+@app.post("/api/knowledge")
+async def add_knowledge_endpoint(
+    text: str = Form(...),
+    source: str = Form("user_text"),
+    session_id: str = Form(...),
+):
+    """Chunk, embed, and store pasted text into Supabase knowledge_chunks."""
+    sb = _get_supabase()
+    if sb is None:
+        raise HTTPException(status_code=503, detail="Supabase not configured")
+    if _generator is None:
+        raise HTTPException(status_code=503, detail="Pipeline not ready")
+    chunks = _chunk_text(text.strip(), chunk_size=400, overlap=50)
+    if not chunks:
+        raise HTTPException(status_code=400, detail="No text content to add")
+    inserted = 0
+    for chunk in chunks:
+        try:
+            emb = _embed_text(chunk)
+            sb.table("knowledge_chunks").insert({
+                "session_id": session_id,
+                "source": source,
+                "text": chunk,
+                "embedding": emb,
+            }).execute()
+            inserted += 1
+        except Exception as exc:
+            logger.warning("Knowledge chunk insert failed: %s", exc)
+    logger.info("Knowledge: inserted %d chunks from source '%s'", inserted, source)
+    return {"chunks_added": inserted, "source": source}
+
+
+@app.post("/api/knowledge-file")
+async def add_knowledge_file_endpoint(
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+):
+    """Upload a file, extract text, chunk and embed into knowledge_chunks."""
+    sb = _get_supabase()
+    if sb is None:
+        raise HTTPException(status_code=503, detail="Supabase not configured")
+    if _generator is None:
+        raise HTTPException(status_code=503, detail="Pipeline not ready")
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large — max 5 MB")
+    fname = (file.filename or "").lower()
+    ctype = file.content_type or "application/octet-stream"
+    source = file.filename or "uploaded_file"
+    if fname.endswith(".pdf"):
+        text = _extract_pdf_text(content)
+    elif fname.endswith((".md", ".txt")):
+        text = content.decode("utf-8", errors="replace")[:16000]
+    elif fname.endswith((".png", ".jpg", ".jpeg")) or ctype.startswith("image/"):
+        text = await asyncio.to_thread(_extract_image_text_sync, content, ctype)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type — use PDF, TXT, MD, or image")
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Could not extract text from file")
+    chunks = _chunk_text(text, chunk_size=400, overlap=50)
+    inserted = 0
+    for chunk in chunks:
+        try:
+            emb = _embed_text(chunk)
+            sb.table("knowledge_chunks").insert({
+                "session_id": session_id,
+                "source": source,
+                "text": chunk,
+                "embedding": emb,
+            }).execute()
+            inserted += 1
+        except Exception as exc:
+            logger.warning("Knowledge file chunk insert failed: %s", exc)
+    logger.info("Knowledge file: inserted %d chunks from '%s'", inserted, source)
+    return {"chunks_added": inserted, "source": source}
+
+
+@app.get("/api/knowledge/{session_id}")
+def list_knowledge_endpoint(session_id: str):
+    """List unique knowledge sources uploaded for a session."""
+    sb = _get_supabase()
+    if sb is None:
+        return []
+    try:
+        rows = (
+            sb.table("knowledge_chunks")
+            .select("id, source, created_at")
+            .eq("session_id", session_id)
+            .order("created_at", desc=False)
+            .execute()
+            .data
+        )
+        sources: dict[str, dict] = {}
+        for r in rows:
+            src = r["source"]
+            if src not in sources:
+                sources[src] = {
+                    "id": r["id"],
+                    "source": src,
+                    "chunk_count": 0,
+                    "created_at": r["created_at"],
+                }
+            sources[src]["chunk_count"] += 1
+        return list(sources.values())
+    except Exception as exc:
+        logger.warning("List knowledge failed: %s", exc)
+        return []
+
+
+@app.delete("/api/knowledge/{chunk_id}")
+def delete_knowledge_endpoint(chunk_id: str):
+    """Delete all chunks sharing the same source+session as the given chunk_id."""
+    sb = _get_supabase()
+    if sb is None:
+        raise HTTPException(status_code=503, detail="Supabase not configured")
+    try:
+        row = (
+            sb.table("knowledge_chunks")
+            .select("source, session_id")
+            .eq("id", chunk_id)
+            .execute()
+            .data
+        )
+        if not row:
+            raise HTTPException(status_code=404, detail="Chunk not found")
+        source     = row[0]["source"]
+        session_id = row[0]["session_id"]
+        sb.table("knowledge_chunks").delete().eq("session_id", session_id).eq("source", source).execute()
+        logger.info("Knowledge: deleted all chunks for source '%s' in session %s", source, session_id)
+        return {"ok": True, "deleted_source": source}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Delete knowledge failed: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -989,7 +1259,29 @@ def _chat_logic(
             )
 
     top_score: Optional[float] = chunks[0]["score"] if chunks else None
-    context = _retriever.format_context(chunks) if chunks else ""
+
+    # ── Knowledge base retrieval (session-scoped) ─────────────────────────────
+    knowledge_chunks: list[dict] = []
+    if request.session_id and request.session_id not in ("anon", ""):
+        try:
+            knowledge_chunks = _retrieve_knowledge(retrieval_query, request.session_id)
+            if knowledge_chunks:
+                logger.info("Knowledge base: %d chunk(s) for session %s", len(knowledge_chunks), request.session_id)
+        except Exception as kexc:
+            logger.warning("Knowledge retrieval error: %s", kexc)
+
+    # ── Build merged context ──────────────────────────────────────────────────
+    faiss_context = _retriever.format_context(chunks) if chunks else ""
+    if knowledge_chunks:
+        kb_text = "\n\n".join(
+            f"[Knowledge Base — {c['source']}]\n{c['text']}"
+            for c in knowledge_chunks
+        )
+        context = f"[User Knowledge Base]\n{kb_text}"
+        if faiss_context:
+            context += f"\n\n[Retrieved Documentation]\n{faiss_context}"
+    else:
+        context = faiss_context
 
     # Inject file attachment text ahead of retrieved docs
     if extra_context:

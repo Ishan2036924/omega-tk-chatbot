@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { RefreshCw, TrendingUp, Code2, ShieldAlert, Clock } from 'lucide-react'
+import { RefreshCw, TrendingUp, Code2, ShieldAlert, Clock, ThumbsUp } from 'lucide-react'
 import { fetchAnalytics } from '../api.js'
 
 function StatCard({ icon: Icon, label, value, color }) {
@@ -142,6 +142,40 @@ export default function AnalyticsDashboard() {
           />
         </div>
 
+        {/* Response Quality card */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center flex-shrink-0">
+              <ThumbsUp size={12} className="text-white" />
+            </div>
+            <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Response Quality</h3>
+          </div>
+          {loading ? (
+            <div className="text-gray-300 text-sm">Loading…</div>
+          ) : data?.helpful_rate == null ? (
+            <div className="text-gray-300 text-xs">No feedback collected yet</div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-end gap-3">
+                <p className={`text-3xl font-bold leading-none ${data.helpful_rate >= 70 ? 'text-emerald-500' : data.helpful_rate >= 40 ? 'text-amber-500' : 'text-red-400'}`}>
+                  {data.helpful_rate}%
+                </p>
+                <p className="text-xs text-gray-400 pb-0.5">helpful rate</p>
+              </div>
+              {/* Stacked bar */}
+              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${data.helpful_rate >= 70 ? 'bg-emerald-400' : data.helpful_rate >= 40 ? 'bg-amber-400' : 'bg-red-400'}`}
+                  style={{ width: `${data.helpful_rate}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-gray-400">
+                👍 {data.total_helpful ?? 0} helpful · 👎 {data.total_not_helpful ?? 0} not helpful
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Bar chart */}
         <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
           <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
@@ -180,6 +214,7 @@ export default function AnalyticsDashboard() {
                     <th className="px-4 py-2.5 font-medium">Message</th>
                     <th className="px-4 py-2.5 font-medium">Intent</th>
                     <th className="px-4 py-2.5 font-medium">Status</th>
+                    <th className="px-4 py-2.5 font-medium text-center whitespace-nowrap">Feedback</th>
                     <th className="px-4 py-2.5 font-medium text-right whitespace-nowrap">Latency</th>
                   </tr>
                 </thead>
@@ -203,6 +238,14 @@ export default function AnalyticsDashboard() {
                           : q.has_code
                             ? <span className="text-purple-600 font-medium">Code</span>
                             : <span className="text-blue-500 font-medium">Answer</span>}
+                      </td>
+                      <td className="px-4 py-2.5 text-center text-xs text-gray-400 whitespace-nowrap">
+                        {(q.feedback?.up > 0 || q.feedback?.down > 0) ? (
+                          <span>
+                            {q.feedback.up > 0 && <span className="mr-1">👍{q.feedback.up > 1 ? ` ×${q.feedback.up}` : ''}</span>}
+                            {q.feedback.down > 0 && <span>👎{q.feedback.down > 1 ? ` ×${q.feedback.down}` : ''}</span>}
+                          </span>
+                        ) : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-gray-400 text-right">
                         {q.latency_ms ? `${q.latency_ms} ms` : '—'}

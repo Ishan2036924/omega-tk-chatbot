@@ -83,6 +83,80 @@ export async function transcribeAudio(blob) {
 }
 
 /**
+ * Load chat history for a session from Supabase.
+ * @param {string} sessionId
+ * @returns {Promise<Array<{role, content, created_at}>>}
+ */
+export async function loadHistory(sessionId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/history/${encodeURIComponent(sessionId)}`)
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Add pasted text to the session knowledge base.
+ */
+export async function addKnowledge(text, source, sessionId) {
+  const formData = new FormData()
+  formData.append('text', text)
+  formData.append('source', source)
+  formData.append('session_id', sessionId)
+  const res = await fetch(`${BASE_URL}/api/knowledge`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try { const e = await res.json(); detail = e.detail || detail } catch {}
+    throw new Error(detail)
+  }
+  return res.json()
+}
+
+/**
+ * Upload a file to the session knowledge base.
+ */
+export async function addKnowledgeFile(file, sessionId) {
+  const formData = new FormData()
+  formData.append('session_id', sessionId)
+  formData.append('file', file)
+  const res = await fetch(`${BASE_URL}/api/knowledge-file`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try { const e = await res.json(); detail = e.detail || detail } catch {}
+    throw new Error(detail)
+  }
+  return res.json()
+}
+
+/**
+ * List knowledge sources for a session.
+ */
+export async function listKnowledge(sessionId) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/knowledge/${encodeURIComponent(sessionId)}`)
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Delete a knowledge source (deletes all chunks with same source+session).
+ */
+export async function deleteKnowledge(chunkId) {
+  const res = await fetch(`${BASE_URL}/api/knowledge/${chunkId}`, { method: 'DELETE' })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try { const e = await res.json(); detail = e.detail || detail } catch {}
+    throw new Error(detail)
+  }
+  return res.json()
+}
+
+/**
  * Send a message with an optional file attachment (multipart).
  * @param {string} message
  * @param {Array} history

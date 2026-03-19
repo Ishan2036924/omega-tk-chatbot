@@ -1,10 +1,35 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import LeftPanel from './components/LeftPanel.jsx'
 import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
-import { sendMessage, sendMessageWithFile, submitFeedback } from './api.js'
+import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory } from './api.js'
 
 const genId = () => Math.random().toString(36).slice(2, 9)
+
+const LS_KEY = 'omega_session_id'
+
+/** Parse a stored bot content string back into ChatResponse-shaped data. */
+function parseStoredBotContent(content) {
+  const match = content.match(/^([\s\S]*?)```python\n([\s\S]*?)```/m)
+  if (match) {
+    return {
+      explanation: match[1].trim() || 'Here is the Python code:',
+      code: match[2].trim(),
+      language: 'python',
+      is_fallback: false,
+      fallback_message: null,
+      attempts: 1,
+    }
+  }
+  return {
+    explanation: content,
+    code: null,
+    language: null,
+    is_fallback: false,
+    fallback_message: null,
+    attempts: 1,
+  }
+}
 
 function buildExportMarkdown(session) {
   const date = new Date(session.createdAt).toLocaleDateString('en-US', {
@@ -32,10 +57,63 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [leftOpen, setLeftOpen] = useState(false)   // mobile overlay
   const [rightOpen, setRightOpen] = useState(false) // mobile overlay
-  const [view, setView] = useState('chat')          // 'chat' | 'analytics'
+  const [view, setView] = useState('chat')          // 'chat' | 'analytics' | 'knowledge'
+  const [toast, setToast] = useState(null)          // transient notification string
 
   const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
   const messages = currentSession?.messages ?? []
+
+  const showToast = useCallback((msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }, [])
+
+  /* ── Feature 1+2: persist session_id in localStorage, restore history ── */
+  useEffect(() => {
+    let sid = localStorage.getItem(LS_KEY)
+    if (!sid) {
+      sid = genId()
+      localStorage.setItem(LS_KEY, sid)
+    }
+    // Create placeholder session entry immediately
+    setSessions([{
+      id: sid,
+      title: 'Omega TK Session',
+      messages: [],
+      createdAt: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+    }])
+    setCurrentSessionId(sid)
+
+    // Load history from Supabase and restore messages
+    loadHistory(sid).then(rows => {
+      if (!rows || rows.length === 0) return
+      const msgs = rows.map(r => {
+        const isBot = r.role === 'assistant'
+        return {
+          id: genId(),
+          role: isBot ? 'bot' : 'user',
+          text: isBot ? undefined : r.content,
+          data: isBot ? parseStoredBotContent(r.content) : undefined,
+          timestamp: r.created_at || new Date().toISOString(),
+          feedback: null,
+        }
+      })
+      const firstUser = msgs.find(m => m.role === 'user')
+      const title = firstUser
+        ? (firstUser.text.length > 42 ? firstUser.text.slice(0, 42) + '…' : firstUser.text)
+        : 'Restored Session'
+      setSessions([{
+        id: sid,
+        title,
+        messages: msgs,
+        createdAt: msgs[0]?.timestamp || new Date().toISOString(),
+        lastActive: msgs.at(-1)?.timestamp || new Date().toISOString(),
+      }])
+      showToast(`History restored · ${msgs.length} messages`)
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* ── Send a message ─────────────────────────────────── */
   const handleSend = useCallback(async (text, file = null) => {
@@ -60,6 +138,7 @@ export default function App() {
     let sid = currentSessionId
     if (!sid) {
       sid = genId()
+      localStorage.setItem(LS_KEY, sid)
       const title = trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed
       setSessions(prev => [{
         id: sid, title, messages: [userMsg],
@@ -67,11 +146,14 @@ export default function App() {
       }, ...prev])
       setCurrentSessionId(sid)
     } else {
-      setSessions(prev => prev.map(s =>
-        s.id === sid
-          ? { ...s, messages: [...s.messages, userMsg], lastActive: new Date().toISOString() }
-          : s
-      ))
+      setSessions(prev => prev.map(s => {
+        if (s.id !== sid) return s
+        // Update title on first real message (replaces placeholder title)
+        const newTitle = s.messages.length === 0
+          ? (trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed)
+          : s.title
+        return { ...s, title: newTitle, messages: [...s.messages, userMsg], lastActive: new Date().toISOString() }
+      }))
     }
 
     setIsLoading(true)
@@ -149,6 +231,13 @@ export default function App() {
         />
       )}
 
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-800 text-white text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none">
+          {toast}
+        </div>
+      )}
+
       {/* ── Left Panel ─────────────────────────────────── */}
       <div className={`
         fixed lg:relative z-30 lg:z-auto h-full panel-slide
@@ -158,7 +247,17 @@ export default function App() {
           sessions={sessions}
           currentSessionId={currentSessionId}
           onSelectSession={(id) => { setCurrentSessionId(id); setView('chat'); setLeftOpen(false) }}
-          onNewChat={() => { setCurrentSessionId(null); setView('chat'); setLeftOpen(false) }}
+          onNewChat={() => {
+            const sid = genId()
+            localStorage.setItem(LS_KEY, sid)
+            setCurrentSessionId(sid)
+            setSessions(prev => [{
+              id: sid, title: 'Omega TK Session', messages: [],
+              createdAt: new Date().toISOString(), lastActive: new Date().toISOString(),
+            }, ...prev])
+            setView('chat')
+            setLeftOpen(false)
+          }}
           activeView={view}
           onSelectView={setView}
         />
@@ -176,6 +275,7 @@ export default function App() {
           onToggleLeft={() => setLeftOpen(true)}
           onToggleRight={() => setRightOpen(true)}
           view={view}
+          sessionId={currentSessionId}
         />
       </div>
 

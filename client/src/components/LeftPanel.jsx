@@ -1,10 +1,11 @@
-import { MessageSquare, Clock, Bookmark, BarChart2, Plus, X, Zap } from 'lucide-react'
+import { MessageSquare, Clock, Bookmark, BarChart2, BookOpen, Plus, X, Zap } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { icon: MessageSquare, label: 'All Chats', id: 'all' },
-  { icon: Clock,         label: 'Recent',    id: 'recent' },
-  { icon: Bookmark,      label: 'Saved',     id: 'saved' },
-  { icon: BarChart2,     label: 'Analytics', id: 'analytics' },
+  { icon: MessageSquare, label: 'All Chats',      id: 'all' },
+  { icon: Clock,         label: 'Recent',          id: 'recent' },
+  { icon: Bookmark,      label: 'Saved',           id: 'saved' },
+  { icon: BarChart2,     label: 'Analytics',       id: 'analytics' },
+  { icon: BookOpen,      label: 'Knowledge Base',  id: 'knowledge' },
 ]
 
 function formatTime(iso) {
@@ -38,14 +39,15 @@ export default function LeftPanel({ sessions, currentSessionId, onSelectSession,
       {/* Nav */}
       <nav className="px-3 pt-4 pb-2 space-y-0.5">
         {NAV_ITEMS.map(({ icon: Icon, label, id }) => {
-          const isActive = id === 'analytics'
-            ? activeView === 'analytics'
-            : activeView !== 'analytics' && id === 'all'
+          const viewIds = ['analytics', 'knowledge']
+          const isActive = viewIds.includes(id)
+            ? activeView === id
+            : !viewIds.includes(activeView) && id === 'all'
           return (
             <button
               key={id}
               onClick={() => {
-                if (id === 'analytics') onSelectView?.('analytics')
+                if (id === 'analytics' || id === 'knowledge') onSelectView?.(id)
                 else onSelectView?.('chat')
               }}
               className={`
