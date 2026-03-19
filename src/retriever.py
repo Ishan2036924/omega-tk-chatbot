@@ -1,9 +1,10 @@
 """Retriever module for finding relevant chunks from the FAISS index."""
 
+import os
 import json
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 
 from config import (
     FAISS_INDEX_PATH,
@@ -40,17 +41,21 @@ class Retriever:
             self.chunks = json.load(f)
         print(f"  Loaded {len(self.chunks)} chunks")
 
-        # Load embedding model
-        print(f"  Loading embedding model: {EMBEDDING_MODEL}...")
-        self.model = SentenceTransformer(EMBEDDING_MODEL)
+        # OpenAI client for embeddings
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        print(f"  Using OpenAI embedding model: {EMBEDDING_MODEL}")
         print("Retriever ready!")
 
     def embed_query(self, query: str) -> np.ndarray:
-        """Embed a query string."""
-        embedding = self.model.encode([query], convert_to_numpy=True)
-        # Normalize for cosine similarity
+        """Embed a query string using OpenAI embeddings."""
+        response = self.client.embeddings.create(
+            input=[query],
+            model=EMBEDDING_MODEL,
+        )
+        embedding = np.array([response.data[0].embedding], dtype=np.float32)
+        # Normalize for cosine similarity (IndexFlatIP)
         embedding = embedding / np.linalg.norm(embedding, axis=1, keepdims=True)
-        return embedding.astype(np.float32)
+        return embedding
 
     def retrieve(self, query: str, top_k: int = TOP_K) -> list[dict]:
         """
@@ -65,13 +70,10 @@ class Retriever:
             filtered by similarity threshold. Returns empty list if
             no chunks meet the threshold.
         """
-        # Embed the query
         query_embedding = self.embed_query(query)
 
-        # Search FAISS index
         scores, indices = self.index.search(query_embedding, top_k)
 
-        # Collect results above threshold
         results = []
         for score, idx in zip(scores[0], indices[0]):
             if idx < 0:  # FAISS returns -1 for empty slots

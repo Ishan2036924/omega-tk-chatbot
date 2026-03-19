@@ -1,13 +1,17 @@
 """Ingest pipeline for building the FAISS index from training data and scraped docs."""
 
+import os
 import json
 import re
 import requests
 from bs4 import BeautifulSoup
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import faiss
 import numpy as np
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from config import (
     TRAINING_PROMPTS_PATH,
@@ -20,6 +24,8 @@ from config import (
     CHUNK_SIZE,
     CHUNK_OVERLAP,
 )
+
+_openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def load_training_prompts() -> list[dict]:
@@ -126,11 +132,25 @@ def create_chunks(training_prompts: list[dict], doc_texts: list[str]) -> list[di
     return chunks
 
 
-def build_embeddings(chunks: list[dict], model: SentenceTransformer) -> np.ndarray:
-    """Generate embeddings for all chunks."""
-    print("\nGenerating embeddings...")
+def build_embeddings(chunks: list[dict]) -> np.ndarray:
+    """Generate embeddings for all chunks using OpenAI API (batched)."""
+    print("\nGenerating embeddings with OpenAI...")
     texts = [chunk["text"] for chunk in chunks]
-    embeddings = model.encode(texts, show_progress_bar=True, convert_to_numpy=True)
+
+    BATCH_SIZE = 100  # OpenAI allows up to 2048 inputs per request
+    all_embeddings = []
+
+    for i in range(0, len(texts), BATCH_SIZE):
+        batch = texts[i : i + BATCH_SIZE]
+        print(f"  Embedding batch {i // BATCH_SIZE + 1}/{(len(texts) + BATCH_SIZE - 1) // BATCH_SIZE} ({len(batch)} chunks)...")
+        response = _openai_client.embeddings.create(
+            input=batch,
+            model=EMBEDDING_MODEL,
+        )
+        batch_embeddings = [item.embedding for item in response.data]
+        all_embeddings.extend(batch_embeddings)
+
+    embeddings = np.array(all_embeddings, dtype=np.float32)
     # Normalize for cosine similarity (IndexFlatIP)
     embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
     print(f"Generated {len(embeddings)} embeddings of dimension {embeddings.shape[1]}")
@@ -172,12 +192,9 @@ def main():
     # Create chunks
     chunks = create_chunks(training_prompts, doc_texts)
 
-    # Load embedding model
-    print(f"\nLoading embedding model: {EMBEDDING_MODEL}...")
-    model = SentenceTransformer(EMBEDDING_MODEL)
-
     # Build embeddings
-    embeddings = build_embeddings(chunks, model)
+    print(f"\nUsing OpenAI embedding model: {EMBEDDING_MODEL}")
+    embeddings = build_embeddings(chunks)
 
     # Build FAISS index
     index = build_faiss_index(embeddings)

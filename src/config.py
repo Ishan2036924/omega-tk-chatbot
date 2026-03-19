@@ -21,8 +21,8 @@ FAISS_INDEX_PATH = PROCESSED_DIR / "faiss.index"
 CHUNKS_PATH = PROCESSED_DIR / "chunks.json"
 
 # Embedding model settings
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-EMBEDDING_DIMENSION = 384
+EMBEDDING_MODEL = "text-embedding-3-small"
+EMBEDDING_DIMENSION = 1536
 
 # Text splitting settings
 CHUNK_SIZE = 500

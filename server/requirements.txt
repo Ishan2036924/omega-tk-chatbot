@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
 openai
-sentence-transformers
 faiss-cpu
 numpy
 python-dotenv
