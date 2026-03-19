@@ -1,126 +1,149 @@
-/**
- * Scrollable message list that auto-scrolls to the bottom whenever
- * new messages arrive or the thinking indicator appears.
- * Contains inline sub-components for each message type.
- */
 import { useEffect, useRef, useState } from 'react'
+import { ThumbsUp, ThumbsDown, AlertTriangle, Zap } from 'lucide-react'
 import CodeBlock from './CodeBlock.jsx'
 import TextShimmer from './TextShimmer.jsx'
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-/** User's message bubble — right-aligned with a subtle dark background. */
-function UserMessage({ text }) {
-  return (
-    <div className="flex justify-end mb-6">
-      <div className="bg-[#2f2f2f] rounded-2xl px-4 py-3 max-w-[80%] text-sm text-gray-100 leading-relaxed whitespace-pre-wrap">
-        {text}
-      </div>
-    </div>
-  )
-}
-
-/** Amber warning box shown when a guardrail blocks the query. */
-function FallbackBox({ message }) {
-  const parts = message.split(/(https?:\/\/\S+)/g)
-  return (
-    <div className="bg-amber-950/50 border border-amber-600/50 rounded-xl px-4 py-3 text-sm text-amber-200 leading-relaxed">
-      <span className="font-semibold text-amber-400 mr-2">⚠</span>
-      {parts.map((part, i) =>
-        part.match(/^https?:\/\//) ? (
-          <a key={i} href={part} target="_blank" rel="noreferrer" className="underline hover:text-amber-100 break-all">
-            {part}
-          </a>
-        ) : (
-          part
-        )
-      )}
-    </div>
-  )
-}
-
-/**
- * Bot response — renders a fallback warning, explanation-only, or
- * explanation + code block. Empty code fields are silently omitted.
- */
-function BotMessage({ data }) {
-  if (data.is_fallback) {
-    return (
-      <div className="mb-6">
-        <FallbackBox message={data.fallback_message} />
-      </div>
-    )
-  }
-
-  return (
-    <div className="mb-6 space-y-3">
-      {data.explanation && (
-        <p className="text-sm text-gray-200 leading-relaxed">{data.explanation}</p>
-      )}
-      {/* Only render code block when there's actual code */}
-      {data.code && (
-        <CodeBlock code={data.code} language={data.language ?? 'python'} />
-      )}
-      {!data.explanation && !data.code && (
-        <p className="text-sm text-gray-500 italic">No response content.</p>
-      )}
-      {data.attempts > 1 && (
-        <p className="text-xs text-gray-600 select-none">
-          ✓ Validated after {data.attempts} attempts
-        </p>
-      )}
-    </div>
-  )
-}
-
-/** Status messages that cycle every 2 s while waiting for a response. */
 const STATUS_MESSAGES = [
-  'Thinking...',
-  'Searching documentation...',
-  'Retrieving relevant code...',
-  'Generating response...',
-  'Validating output...',
+  'Thinking…',
+  'Searching documentation…',
+  'Retrieving relevant context…',
+  'Generating response…',
+  'Validating output…',
 ]
 
-/**
- * Animated loading indicator: shimmer text that cycles through status messages.
- * Resets to "Thinking..." each time it mounts (i.e. each new request).
- */
+function formatTime(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+}
+
+/* ── Typing indicator ─────────────────────────────────── */
 function ThinkingIndicator() {
-  const [idx, setIdx] = useState(0)
-
+  const [step, setStep] = useState(0)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setIdx((i) => (i + 1) % STATUS_MESSAGES.length)
-    }, 2000)
-    return () => clearInterval(timer)
+    const t = setInterval(() => setStep(s => (s + 1) % STATUS_MESSAGES.length), 2000)
+    return () => clearInterval(t)
   }, [])
-
   return (
-    <div className="mb-6">
-      <div className="inline-flex items-center gap-2.5 bg-[#1e1e1e] border border-[#2a2a2a] rounded-2xl px-4 py-3">
-        {/* Pulsing ping dot */}
-        <span className="relative flex h-2 w-2 flex-shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-500 opacity-60" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-gray-600" />
-        </span>
-        <TextShimmer className="font-mono text-sm" duration={1.5}>
-          {STATUS_MESSAGES[idx]}
+    <div className="flex items-start gap-3 px-4 sm:px-6 py-2">
+      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Zap size={13} className="text-white" />
+      </div>
+      <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-3">
+        <div className="flex gap-1">
+          {[0, 1, 2].map(i => (
+            <span
+              key={i}
+              className="w-1.5 h-1.5 rounded-full bg-gray-400 dot-bounce"
+              style={{ animationDelay: `${i * 0.18}s` }}
+            />
+          ))}
+        </div>
+        <TextShimmer className="text-xs text-gray-500" duration={1.5}>
+          {STATUS_MESSAGES[step]}
         </TextShimmer>
       </div>
     </div>
   )
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+/* ── Fallback box ─────────────────────────────────────── */
+function FallbackBox({ message }) {
+  const parts = (message ?? '').split(/(https?:\/\/[^\s]+)/g)
+  return (
+    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+      <AlertTriangle size={14} className="flex-shrink-0 mt-0.5 text-amber-500" />
+      <p className="leading-relaxed">
+        {parts.map((p, i) =>
+          /^https?:\/\//.test(p)
+            ? <a key={i} href={p} target="_blank" rel="noreferrer" className="underline text-amber-600">{p}</a>
+            : p
+        )}
+      </p>
+    </div>
+  )
+}
 
-/**
- * @param {{
- *   messages: Array<{role: 'user'|'bot', text?: string, data?: object}>,
- *   isLoading: boolean
- * }} props
- */
-export default function MessageList({ messages, isLoading }) {
+/* ── User bubble ──────────────────────────────────────── */
+function UserMessage({ msg }) {
+  return (
+    <div className="flex justify-end px-4 sm:px-6 py-1.5">
+      <div className="max-w-[72%] sm:max-w-[65%]">
+        <div className="bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-3">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+        </div>
+        <p className="text-[10px] text-gray-400 mt-1 text-right pr-1">{formatTime(msg.timestamp)}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Bot bubble ───────────────────────────────────────── */
+function BotMessage({ msg, onFeedback }) {
+  const d = msg.data ?? {}
+  return (
+    <div className="flex items-start gap-3 px-4 sm:px-6 py-1.5">
+      {/* Avatar */}
+      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
+        <Zap size={13} className="text-white" />
+      </div>
+
+      <div className="flex-1 min-w-0 max-w-[85%]">
+        <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+          {d.is_fallback ? (
+            <FallbackBox message={d.fallback_message} />
+          ) : (
+            <div className="space-y-3">
+              {d.explanation && (
+                <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">{d.explanation}</p>
+              )}
+              {d.code && <CodeBlock code={d.code} language={d.language ?? 'python'} />}
+              {!d.explanation && !d.code && (
+                <p className="text-sm text-gray-400 italic">No response content.</p>
+              )}
+              {d.attempts > 1 && (
+                <p className="text-[10px] text-gray-400">✓ Validated after {d.attempts} attempts</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Timestamp + feedback row */}
+        <div className="flex items-center gap-2 mt-1 ml-1">
+          <span className="text-[10px] text-gray-400">{formatTime(msg.timestamp)}</span>
+          {!d.is_fallback && (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => onFeedback(msg.id, 'up')}
+                title="Helpful"
+                className={`p-1 rounded-md transition-colors ${
+                  msg.feedback === 'up'
+                    ? 'text-green-600 bg-green-100'
+                    : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                <ThumbsUp size={11} />
+              </button>
+              <button
+                onClick={() => onFeedback(msg.id, 'down')}
+                title="Not helpful"
+                className={`p-1 rounded-md transition-colors ${
+                  msg.feedback === 'down'
+                    ? 'text-red-500 bg-red-100'
+                    : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                }`}
+              >
+                <ThumbsDown size={11} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Main list ────────────────────────────────────────── */
+export default function MessageList({ messages, isLoading, onFeedback }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -128,13 +151,11 @@ export default function MessageList({ messages, isLoading }) {
   }, [messages, isLoading])
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-4">
-      {messages.map((msg, i) =>
-        msg.role === 'user' ? (
-          <UserMessage key={i} text={msg.text} />
-        ) : (
-          <BotMessage key={i} data={msg.data} />
-        )
+    <div className="py-4 space-y-0.5">
+      {messages.map(msg =>
+        msg.role === 'user'
+          ? <UserMessage key={msg.id} msg={msg} />
+          : <BotMessage key={msg.id} msg={msg} onFeedback={onFeedback} />
       )}
       {isLoading && <ThinkingIndicator />}
       <div ref={bottomRef} />

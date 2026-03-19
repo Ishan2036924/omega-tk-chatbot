@@ -1,129 +1,189 @@
-/**
- * Root component — unified layout shared by welcome and chat states.
- *
- * Structure (always the same shell):
- *   • Header — title + Export button (visible on both screens)
- *   • Message area — welcome content OR chat messages, scrollable
- *   • Input bar — identical on both screens, pinned to bottom
- */
 import { useState, useCallback } from 'react'
-import { Share2 } from 'lucide-react'
-import WelcomeScreen from './components/WelcomeScreen.jsx'
-import MessageList from './components/MessageList.jsx'
-import InputBar from './components/InputBar.jsx'
+import LeftPanel from './components/LeftPanel.jsx'
+import MiddlePanel from './components/MiddlePanel.jsx'
+import RightPanel from './components/RightPanel.jsx'
 import { sendMessage } from './api.js'
 
-/** Download the full conversation as a Markdown file. */
-function exportConversation(messages) {
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-  const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19)
+const genId = () => Math.random().toString(36).slice(2, 9)
 
-  let md = `# Omega TK Code Assistant — Chat Export\n\n**Date**: ${dateStr}\n\n---\n\n`
-  for (const msg of messages) {
+function buildExportMarkdown(session) {
+  const date = new Date(session.createdAt).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  })
+  let md = `# Omega TK Code Assistant — Chat Export\n\n**Date**: ${date}\n**Session**: ${session.id}\n\n---\n\n`
+  for (const msg of session.messages) {
     if (msg.role === 'user') {
-      md += `**User**: ${msg.text}\n\n`
+      md += `**You**: ${msg.text}\n\n`
     } else {
       const d = msg.data ?? {}
-      if (d.is_fallback) {
-        md += `**Assistant**: ⚠ ${d.fallback_message ?? ''}\n\n`
-      } else {
-        if (d.explanation) md += `**Assistant**: ${d.explanation}\n\n`
-        if (d.code) md += `\`\`\`python\n${d.code}\n\`\`\`\n\n`
+      if (d.is_fallback) md += `**Omega TK**: ⚠ ${d.fallback_message ?? ''}\n\n`
+      else {
+        if (d.explanation) md += `**Omega TK**: ${d.explanation}\n\n`
+        if (d.code) md += `\`\`\`${d.language || 'python'}\n${d.code}\n\`\`\`\n\n`
       }
     }
   }
-
-  const blob = new Blob([md], { type: 'text/markdown' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `omega-tk-chat-${timestamp}.md`
-  a.click()
-  URL.revokeObjectURL(url)
+  return md
 }
 
 export default function App() {
-  const [messages, setMessages] = useState([])
+  const [sessions, setSessions] = useState([])
+  const [currentSessionId, setCurrentSessionId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [hasStarted, setHasStarted] = useState(false)
+  const [leftOpen, setLeftOpen] = useState(false)   // mobile overlay
+  const [rightOpen, setRightOpen] = useState(false) // mobile overlay
 
-  const handleSend = useCallback(
-    async (text) => {
-      const trimmed = text.trim()
-      if (!trimmed || isLoading) return
+  const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
+  const messages = currentSession?.messages ?? []
 
-      setMessages((prev) => [...prev, { role: 'user', text: trimmed }])
-      setHasStarted(true)
-      setIsLoading(true)
+  /* ── Send a message ─────────────────────────────────── */
+  const handleSend = useCallback(async (text) => {
+    const trimmed = text.trim()
+    if (!trimmed || isLoading) return
 
-      // Send full history — server summarises older turns when len > 6.
-      const history = messages.map((m) => {
-        if (m.role === 'user') return { role: 'user', content: m.text }
-        const d = m.data ?? {}
-        if (d.is_fallback) return { role: 'bot', content: d.fallback_message ?? '' }
-        const codeBlock = d.code ? `\n\`\`\`python\n${d.code}\n\`\`\`` : ''
-        return { role: 'bot', content: `${d.explanation ?? ''}${codeBlock}` }
-      })
+    // Build history for backend (last 6 turns)
+    const history = messages.slice(-6).map(m => {
+      if (m.role === 'user') return { role: 'user', content: m.text }
+      const d = m.data ?? {}
+      if (d.is_fallback) return { role: 'bot', content: d.fallback_message ?? '' }
+      const code = d.code ? `\n\`\`\`${d.language || 'python'}\n${d.code}\n\`\`\`` : ''
+      return { role: 'bot', content: `${d.explanation ?? ''}${code}` }
+    })
 
-      try {
-        const data = await sendMessage(trimmed, history)
-        setMessages((prev) => [...prev, { role: 'bot', data }])
-      } catch (err) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'bot',
-            data: {
-              is_fallback: true,
-              fallback_message: `Connection error: ${err.message}. Is the server running?`,
-              explanation: '',
-              code: null,
-              language: null,
-            },
-          },
-        ])
-      } finally {
-        setIsLoading(false)
+    const userMsg = {
+      id: genId(), role: 'user', text: trimmed,
+      timestamp: new Date().toISOString(), feedback: null,
+    }
+
+    // Create or update session
+    let sid = currentSessionId
+    if (!sid) {
+      sid = genId()
+      const title = trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed
+      setSessions(prev => [{
+        id: sid, title, messages: [userMsg],
+        createdAt: new Date().toISOString(), lastActive: new Date().toISOString(),
+      }, ...prev])
+      setCurrentSessionId(sid)
+    } else {
+      setSessions(prev => prev.map(s =>
+        s.id === sid
+          ? { ...s, messages: [...s.messages, userMsg], lastActive: new Date().toISOString() }
+          : s
+      ))
+    }
+
+    setIsLoading(true)
+    try {
+      const data = await sendMessage(trimmed, history)
+      const botMsg = { id: genId(), role: 'bot', data, timestamp: new Date().toISOString(), feedback: null }
+      setSessions(prev => prev.map(s =>
+        s.id === sid ? { ...s, messages: [...s.messages, botMsg], lastActive: new Date().toISOString() } : s
+      ))
+    } catch (err) {
+      const botMsg = {
+        id: genId(), role: 'bot',
+        data: { is_fallback: true, fallback_message: `Connection error: ${err.message}` },
+        timestamp: new Date().toISOString(), feedback: null,
       }
-    },
-    [messages, isLoading]
-  )
+      setSessions(prev => prev.map(s =>
+        s.id === sid ? { ...s, messages: [...s.messages, botMsg] } : s
+      ))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [currentSessionId, messages, isLoading])
+
+  /* ── Feedback (thumbs up/down) ───────────────────────── */
+  const handleFeedback = useCallback((msgId, type) => {
+    setSessions(prev => prev.map(s =>
+      s.id === currentSessionId
+        ? {
+            ...s,
+            messages: s.messages.map(m =>
+              m.id === msgId ? { ...m, feedback: m.feedback === type ? null : type } : m
+            ),
+          }
+        : s
+    ))
+  }, [currentSessionId])
+
+  /* ── Export ──────────────────────────────────────────── */
+  const handleExport = useCallback(() => {
+    if (!currentSession) return
+    const md = buildExportMarkdown(currentSession)
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `omega-tk-${currentSession.id}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [currentSession])
+
+  /* ── Right panel data ────────────────────────────────── */
+  const lastBot = messages.filter(m => m.role === 'bot').at(-1)
+  const queryDetails = {
+    isFallback: lastBot?.data?.is_fallback ?? false,
+    attempts: lastBot?.data?.attempts ?? 1,
+    hasCode: !!(lastBot?.data?.code),
+    intent: lastBot?.data?.code ? 'CODE' : lastBot ? 'CONVERSATION' : '—',
+  }
+  const feedbackStats = {
+    up: messages.filter(m => m.feedback === 'up').length,
+    down: messages.filter(m => m.feedback === 'down').length,
+  }
 
   return (
-    <div className="h-screen flex flex-col bg-[#212121] text-white overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-100 font-sans">
 
-      {/* ── Header (always visible) ── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-[#2a2a2a]">
-        <span className="text-sm text-gray-500 font-medium tracking-wide">
-          Omega TK Code Assistant
-        </span>
-        <button
-          onClick={() => exportConversation(messages)}
-          disabled={messages.length === 0}
-          aria-label="Export conversation as Markdown"
-          title="Export as Markdown"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-[#2f2f2f] transition-colors text-xs disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <Share2 size={13} />
-          <span>Export</span>
-        </button>
+      {/* Mobile overlay backdrop */}
+      {(leftOpen || rightOpen) && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          onClick={() => { setLeftOpen(false); setRightOpen(false) }}
+        />
+      )}
+
+      {/* ── Left Panel ─────────────────────────────────── */}
+      <div className={`
+        fixed lg:relative z-30 lg:z-auto h-full panel-slide
+        ${leftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <LeftPanel
+          sessions={sessions}
+          currentSessionId={currentSessionId}
+          onSelectSession={(id) => { setCurrentSessionId(id); setLeftOpen(false) }}
+          onNewChat={() => { setCurrentSessionId(null); setLeftOpen(false) }}
+        />
       </div>
 
-      {/* ── Message area (welcome content OR chat messages) ── */}
-      <div className="flex-1 overflow-y-auto">
-        {!hasStarted ? (
-          <WelcomeScreen onSend={handleSend} />
-        ) : (
-          <MessageList messages={messages} isLoading={isLoading} />
-        )}
+      {/* ── Middle Panel ───────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        <MiddlePanel
+          session={currentSession}
+          messages={messages}
+          isLoading={isLoading}
+          onSend={handleSend}
+          onFeedback={handleFeedback}
+          onExport={handleExport}
+          onToggleLeft={() => setLeftOpen(true)}
+          onToggleRight={() => setRightOpen(true)}
+        />
       </div>
 
-      {/* ── Input bar (always at bottom) ── */}
-      <div className="shrink-0 border-t border-[#2a2a2a] bg-[#212121] px-4 py-4">
-        <div className="max-w-3xl mx-auto">
-          <InputBar onSend={handleSend} isLoading={isLoading} />
-        </div>
+      {/* ── Right Panel ────────────────────────────────── */}
+      <div className={`
+        fixed right-0 lg:relative z-30 lg:z-auto h-full panel-slide
+        ${rightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+      `}>
+        <RightPanel
+          session={currentSession}
+          messages={messages}
+          feedbackStats={feedbackStats}
+          queryDetails={queryDetails}
+          onClose={() => setRightOpen(false)}
+        />
       </div>
     </div>
   )
