@@ -2,13 +2,37 @@ import { Share2, Menu, PanelRight } from 'lucide-react'
 import MessageList from './MessageList.jsx'
 import InputBar from './InputBar.jsx'
 import WelcomeScreen from './WelcomeScreen.jsx'
+import AnalyticsDashboard from './AnalyticsDashboard.jsx'
 
 export default function MiddlePanel({
   session, messages, isLoading,
   onSend, onFeedback, onExport,
   onToggleLeft, onToggleRight,
+  view,
 }) {
   const hasMessages = messages.length > 0
+
+  if (view === 'analytics') {
+    return (
+      <div className="flex flex-col h-full bg-white min-w-0">
+        {/* Header */}
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onToggleLeft}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+            >
+              <Menu size={18} />
+            </button>
+            <h1 className="text-sm font-semibold text-gray-800 leading-tight">Analytics</h1>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0">
+          <AnalyticsDashboard />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full bg-white min-w-0">

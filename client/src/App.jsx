@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import LeftPanel from './components/LeftPanel.jsx'
 import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
-import { sendMessage, submitFeedback } from './api.js'
+import { sendMessage, sendMessageWithFile, submitFeedback } from './api.js'
 
 const genId = () => Math.random().toString(36).slice(2, 9)
 
@@ -32,12 +32,13 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [leftOpen, setLeftOpen] = useState(false)   // mobile overlay
   const [rightOpen, setRightOpen] = useState(false) // mobile overlay
+  const [view, setView] = useState('chat')          // 'chat' | 'analytics'
 
   const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
   const messages = currentSession?.messages ?? []
 
   /* ── Send a message ─────────────────────────────────── */
-  const handleSend = useCallback(async (text) => {
+  const handleSend = useCallback(async (text, file = null) => {
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
 
@@ -75,7 +76,9 @@ export default function App() {
 
     setIsLoading(true)
     try {
-      const data = await sendMessage(trimmed, history, sid)
+      const data = file
+        ? await sendMessageWithFile(trimmed, history, sid, file)
+        : await sendMessage(trimmed, history, sid)
       const botMsg = { id: genId(), role: 'bot', data, timestamp: new Date().toISOString(), feedback: null }
       setSessions(prev => prev.map(s =>
         s.id === sid ? { ...s, messages: [...s.messages, botMsg], lastActive: new Date().toISOString() } : s
@@ -154,8 +157,10 @@ export default function App() {
         <LeftPanel
           sessions={sessions}
           currentSessionId={currentSessionId}
-          onSelectSession={(id) => { setCurrentSessionId(id); setLeftOpen(false) }}
-          onNewChat={() => { setCurrentSessionId(null); setLeftOpen(false) }}
+          onSelectSession={(id) => { setCurrentSessionId(id); setView('chat'); setLeftOpen(false) }}
+          onNewChat={() => { setCurrentSessionId(null); setView('chat'); setLeftOpen(false) }}
+          activeView={view}
+          onSelectView={setView}
         />
       </div>
 
@@ -170,6 +175,7 @@ export default function App() {
           onExport={handleExport}
           onToggleLeft={() => setLeftOpen(true)}
           onToggleRight={() => setRightOpen(true)}
+          view={view}
         />
       </div>
 

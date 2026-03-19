@@ -56,3 +56,54 @@ export async function submitFeedback(sessionId, messageId, feedback) {
     // fire-and-forget — never surface feedback errors to the user
   }
 }
+
+/**
+ * Fetch analytics data (last 24 h query stats).
+ */
+export async function fetchAnalytics() {
+  const res = await fetch(`${BASE_URL}/api/analytics`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Send an audio blob to Whisper and return the transcribed text.
+ * @param {Blob} blob — raw audio from MediaRecorder
+ * @returns {Promise<{text: string}>}
+ */
+export async function transcribeAudio(blob) {
+  const formData = new FormData()
+  formData.append('audio', blob, 'recording.webm')
+  const res = await fetch(`${BASE_URL}/api/transcribe`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Send a message with an optional file attachment (multipart).
+ * @param {string} message
+ * @param {Array} history
+ * @param {string|null} sessionId
+ * @param {File|null} file
+ */
+export async function sendMessageWithFile(message, history = [], sessionId = null, file = null) {
+  const formData = new FormData()
+  formData.append('message', message)
+  formData.append('history_json', JSON.stringify(history))
+  if (sessionId) formData.append('session_id', sessionId)
+  if (file) formData.append('file', file)
+
+  const res = await fetch(`${BASE_URL}/api/chat-file`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try { const e = await res.json(); detail = e.detail || detail } catch {}
+    throw new Error(detail)
+  }
+  return res.json()
+}

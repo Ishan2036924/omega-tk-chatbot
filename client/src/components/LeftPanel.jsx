@@ -20,7 +20,7 @@ function formatTime(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function LeftPanel({ sessions, currentSessionId, onSelectSession, onNewChat }) {
+export default function LeftPanel({ sessions, currentSessionId, onSelectSession, onNewChat, activeView, onSelectView }) {
   return (
     <div className="w-[260px] h-full bg-sidebar flex flex-col select-none">
 
@@ -37,25 +37,29 @@ export default function LeftPanel({ sessions, currentSessionId, onSelectSession,
 
       {/* Nav */}
       <nav className="px-3 pt-4 pb-2 space-y-0.5">
-        {NAV_ITEMS.map(({ icon: Icon, label, id }) => (
-          <button
-            key={id}
-            className={`
-              w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-              ${id === 'all'
-                ? 'bg-white/10 text-white'
-                : 'text-white/50 hover:text-white/80 hover:bg-white/5'}
-            `}
-          >
-            <Icon size={16} />
-            <span>{label}</span>
-            {id === 'analytics' && (
-              <span className="ml-auto text-[9px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
-                SOON
-              </span>
-            )}
-          </button>
-        ))}
+        {NAV_ITEMS.map(({ icon: Icon, label, id }) => {
+          const isActive = id === 'analytics'
+            ? activeView === 'analytics'
+            : activeView !== 'analytics' && id === 'all'
+          return (
+            <button
+              key={id}
+              onClick={() => {
+                if (id === 'analytics') onSelectView?.('analytics')
+                else onSelectView?.('chat')
+              }}
+              className={`
+                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                ${isActive
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'}
+              `}
+            >
+              <Icon size={16} />
+              <span>{label}</span>
+            </button>
+          )
+        })}
       </nav>
 
       {/* Session list */}

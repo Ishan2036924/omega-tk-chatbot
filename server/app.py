@@ -20,9 +20,13 @@ import time
 import hashlib
 import json
 import logging
+import io
+import base64
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
+from datetime import datetime, timedelta, timezone
 
 # ── Path setup ────────────────────────────────────────────────────────────────
 _THIS_DIR     = Path(__file__).resolve().parent
@@ -32,7 +36,7 @@ sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env")
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -142,6 +146,48 @@ def _response_text(response: "ChatResponse") -> str:
     if response.code:
         parts.append(f"```{response.language or 'python'}\n{response.code}\n```")
     return "\n\n".join(parts)
+
+
+# ── File extraction helpers ────────────────────────────────────────────────────
+
+def _extract_pdf_text(content: bytes) -> str:
+    """Extract text from a PDF file using pypdf."""
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(content))
+        pages = [page.extract_text() or "" for page in reader.pages[:20]]
+        return "\n\n".join(p for p in pages if p.strip())[:8000]
+    except Exception as exc:
+        logger.warning("PDF extraction failed: %s", exc)
+        return ""
+
+
+def _extract_image_text_sync(content: bytes, content_type: str) -> str:
+    """Send image to GPT-4o vision and return extracted text/description."""
+    try:
+        if _generator is None:
+            return ""
+        b64 = base64.b64encode(content).decode()
+        data_url = f"data:{content_type};base64,{b64}"
+        completion = _generator.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                    {"type": "text", "text": (
+                        "Extract all visible text from this image. If the image shows code, "
+                        "transcribe it exactly. If it shows a diagram or chart, describe it "
+                        "technically. Be thorough."
+                    )},
+                ],
+            }],
+            max_tokens=1000,
+        )
+        return completion.choices[0].message.content or ""
+    except Exception as exc:
+        logger.warning("Image extraction failed: %s", exc)
+        return ""
 
 
 # ── Prompt templates ──────────────────────────────────────────────────────────
@@ -719,8 +765,156 @@ def feedback_endpoint(request: FeedbackRequest):
         return {"ok": False, "reason": str(exc)}
 
 
+# ── Analytics endpoint ────────────────────────────────────────────────────────
+
+@app.get("/api/analytics")
+def analytics_endpoint():
+    """Return query stats for the last 24 h from Supabase queries_log."""
+    sb = _get_supabase()
+    if sb is None:
+        return {
+            "error": "Supabase not configured",
+            "total_queries": 0, "code_requests": 0,
+            "guardrail_blocks": 0, "avg_latency": 0,
+            "hourly_counts": [], "recent_queries": [],
+        }
+    try:
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        rows = (
+            sb.table("queries_log")
+            .select("*")
+            .gte("created_at", cutoff)
+            .order("created_at", desc=True)
+            .execute()
+            .data
+        )
+
+        total      = len(rows)
+        code_req   = sum(1 for r in rows if r.get("has_code"))
+        blocks     = sum(1 for r in rows if r.get("is_fallback"))
+        latencies  = [r["latency_ms"] for r in rows if r.get("latency_ms")]
+        avg_lat    = int(sum(latencies) / len(latencies)) if latencies else 0
+
+        # Build hourly buckets
+        hour_counts: dict[str, int] = {}
+        for r in rows:
+            try:
+                ts = r.get("created_at", "")
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                key = dt.strftime("%H:00")
+                hour_counts[key] = hour_counts.get(key, 0) + 1
+            except Exception:
+                pass
+
+        now = datetime.now(timezone.utc)
+        hourly = [
+            {"hour": (now - timedelta(hours=i)).strftime("%H:00"),
+             "count": hour_counts.get((now - timedelta(hours=i)).strftime("%H:00"), 0)}
+            for i in range(23, -1, -1)
+        ]
+
+        recent = [
+            {
+                "timestamp": r.get("created_at", ""),
+                "message":   (r.get("message") or "")[:60],
+                "intent":    r.get("intent", "—"),
+                "is_fallback": r.get("is_fallback", False),
+                "has_code":    r.get("has_code", False),
+                "latency_ms":  r.get("latency_ms", 0),
+            }
+            for r in rows[:20]
+        ]
+
+        return {
+            "total_queries": total, "code_requests": code_req,
+            "guardrail_blocks": blocks, "avg_latency": avg_lat,
+            "hourly_counts": hourly, "recent_queries": recent,
+        }
+    except Exception as exc:
+        logger.error("Analytics error: %s", exc)
+        return {"error": str(exc), "total_queries": 0, "code_requests": 0,
+                "guardrail_blocks": 0, "avg_latency": 0,
+                "hourly_counts": [], "recent_queries": []}
+
+
+# ── Transcription endpoint ────────────────────────────────────────────────────
+
+@app.post("/api/transcribe")
+async def transcribe_endpoint(audio: UploadFile = File(...)):
+    """Receive a browser audio blob and return Whisper transcription text."""
+    if _generator is None:
+        raise HTTPException(status_code=503, detail="Pipeline not ready")
+    try:
+        content = await audio.read()
+        filename = audio.filename or "recording.webm"
+        content_type = audio.content_type or "audio/webm"
+        audio_file = (filename, io.BytesIO(content), content_type)
+        result = _generator.client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+        )
+        return {"text": result.text}
+    except Exception as exc:
+        logger.error("Transcribe error: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── Chat-with-file endpoint ───────────────────────────────────────────────────
+
+@app.post("/api/chat-file", response_model=ChatResponse)
+async def chat_file_endpoint(
+    message: str = Form(...),
+    history_json: str = Form("[]"),
+    session_id: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+):
+    """Accept multipart/form-data chat request with an optional file attachment."""
+    # ── Parse history ──────────────────────────────────────────────────────────
+    try:
+        history = [HistoryMessage(**h) for h in json.loads(history_json)]
+    except Exception:
+        history = []
+
+    # ── Extract file text ──────────────────────────────────────────────────────
+    extra_context = ""
+    if file:
+        content = await file.read()
+        if len(content) > 5 * 1024 * 1024:
+            return ChatResponse(
+                explanation="", code=None, language=None,
+                is_fallback=True,
+                fallback_message="File too large — maximum size is 5 MB.",
+            )
+        fname = (file.filename or "").lower()
+        ctype = file.content_type or "application/octet-stream"
+        if fname.endswith(".pdf"):
+            extra_context = _extract_pdf_text(content)
+        elif fname.endswith((".md", ".txt")):
+            extra_context = content.decode("utf-8", errors="replace")[:8000]
+        elif fname.endswith((".png", ".jpg", ".jpeg")) or ctype.startswith("image/"):
+            extra_context = await asyncio.to_thread(
+                _extract_image_text_sync, content, ctype
+            )
+        if extra_context:
+            logger.info("File '%s' extracted: %d chars", file.filename, len(extra_context))
+
+    # ── Run pipeline ───────────────────────────────────────────────────────────
+    req = ChatRequest(message=message, history=history, session_id=session_id)
+    t0 = int(time.time() * 1000)
+    sid = session_id or "anon"
+    _sb_save_message(sid, "user", message)
+
+    response, intent, top_score = _chat_logic(req, extra_context=extra_context)
+
+    latency = int(time.time() * 1000) - t0
+    _sb_save_message(sid, "assistant", _response_text(response))
+    _sb_log_query(sid, message, response, intent, top_score, latency)
+    return response
+
+
 def _chat_logic(
     request: ChatRequest,
+    extra_context: str = "",
 ) -> tuple[ChatResponse, str, Optional[float]]:
     """
     Core chat pipeline. Returns (response, intent_label, top_faiss_score).
@@ -796,6 +990,11 @@ def _chat_logic(
 
     top_score: Optional[float] = chunks[0]["score"] if chunks else None
     context = _retriever.format_context(chunks) if chunks else ""
+
+    # Inject file attachment text ahead of retrieved docs
+    if extra_context:
+        file_section = f"[Attached file content]\n{extra_context}\n"
+        context = (file_section + "\n[Retrieved documentation]\n" + context) if context else file_section
 
     # ── Step 3: CONVERSATION path ─────────────────────────────────────────────
     if intent == "CONVERSATION":
