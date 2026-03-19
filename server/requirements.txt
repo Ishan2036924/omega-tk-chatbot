@@ -1,9 +1,9 @@
 fastapi
 uvicorn[standard]
 openai
-supabase
 sentence-transformers
 faiss-cpu
+numpy
 python-dotenv
 pytest
 httpx
