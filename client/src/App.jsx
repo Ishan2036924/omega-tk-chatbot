@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import LeftPanel from './components/LeftPanel.jsx'
 import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
-import { sendMessage } from './api.js'
+import { sendMessage, submitFeedback } from './api.js'
 
 const genId = () => Math.random().toString(36).slice(2, 9)
 
@@ -75,7 +75,7 @@ export default function App() {
 
     setIsLoading(true)
     try {
-      const data = await sendMessage(trimmed, history)
+      const data = await sendMessage(trimmed, history, sid)
       const botMsg = { id: genId(), role: 'bot', data, timestamp: new Date().toISOString(), feedback: null }
       setSessions(prev => prev.map(s =>
         s.id === sid ? { ...s, messages: [...s.messages, botMsg], lastActive: new Date().toISOString() } : s
@@ -106,6 +106,7 @@ export default function App() {
           }
         : s
     ))
+    submitFeedback(currentSessionId, msgId, type)
   }, [currentSessionId])
 
   /* ── Export ──────────────────────────────────────────── */

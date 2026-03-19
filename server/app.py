@@ -13,8 +13,10 @@ Summarization: when history > 6 turns, older turns are summarised into 2-3 sente
 so context is preserved beyond the 6-message window.
 """
 
+import os
 import re
 import sys
+import time
 import hashlib
 import json
 import logging
@@ -65,6 +67,82 @@ VALIDATION_FALLBACK_MSG = (
     "Please try rephrasing, or check the official docs: "
     "https://docs.eyesopen.com/toolkits/python/omegatk/"
 )
+
+# ── Supabase (optional — graceful degradation if not configured) ───────────────
+_supabase_client = None
+
+
+def _get_supabase():
+    """Return a Supabase client, or None if env vars are missing."""
+    global _supabase_client
+    if _supabase_client is not None:
+        return _supabase_client
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key:
+        return None
+    try:
+        from supabase import create_client
+        _supabase_client = create_client(url, key)
+        logger.info("Supabase client initialised.")
+    except Exception as exc:
+        logger.warning("Supabase init failed: %s", exc)
+    return _supabase_client
+
+
+def _sb_save_message(session_id: str, role: str, content: str) -> None:
+    """Persist a chat turn to chat_history. Fire-and-forget."""
+    sb = _get_supabase()
+    if sb is None:
+        return
+    try:
+        sb.table("chat_history").insert({
+            "session_id": session_id,
+            "role": role,
+            "content": content,
+        }).execute()
+    except Exception as exc:
+        logger.warning("Supabase chat_history insert failed: %s", exc)
+
+
+def _sb_log_query(
+    session_id: str,
+    message: str,
+    response: "ChatResponse",
+    intent: str,
+    faiss_score: Optional[float],
+    latency_ms: int,
+) -> None:
+    """Log query analytics to queries_log. Fire-and-forget."""
+    sb = _get_supabase()
+    if sb is None:
+        return
+    try:
+        sb.table("queries_log").insert({
+            "session_id": session_id,
+            "message": message,
+            "intent": intent,
+            "is_fallback": response.is_fallback,
+            "has_code": response.code is not None,
+            "attempts": response.attempts,
+            "faiss_score": faiss_score,
+            "latency_ms": latency_ms,
+        }).execute()
+    except Exception as exc:
+        logger.warning("Supabase queries_log insert failed: %s", exc)
+
+
+def _response_text(response: "ChatResponse") -> str:
+    """Flatten a ChatResponse into a plain string for storage."""
+    if response.is_fallback:
+        return response.fallback_message or ""
+    parts = []
+    if response.explanation:
+        parts.append(response.explanation)
+    if response.code:
+        parts.append(f"```{response.language or 'python'}\n{response.code}\n```")
+    return "\n\n".join(parts)
+
 
 # ── Prompt templates ──────────────────────────────────────────────────────────
 
@@ -575,6 +653,7 @@ class HistoryMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[HistoryMessage] = []
+    session_id: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -584,6 +663,12 @@ class ChatResponse(BaseModel):
     is_fallback: bool
     fallback_message: Optional[str]
     attempts: int = 1
+
+
+class FeedbackRequest(BaseModel):
+    session_id: str
+    message_id: str
+    feedback: str   # "up" | "down"
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -597,9 +682,30 @@ def health():
     }
 
 
-@app.post("/api/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest):
+@app.post("/api/feedback")
+def feedback_endpoint(request: FeedbackRequest):
+    """Record thumbs-up / thumbs-down for a single bot response."""
+    sb = _get_supabase()
+    if sb is None:
+        return {"ok": False, "reason": "Supabase not configured"}
+    try:
+        sb.table("feedback").insert({
+            "session_id": request.session_id,
+            "message_id": request.message_id,
+            "feedback": request.feedback,
+        }).execute()
+        return {"ok": True}
+    except Exception as exc:
+        logger.warning("Supabase feedback insert failed: %s", exc)
+        return {"ok": False, "reason": str(exc)}
+
+
+def _chat_logic(
+    request: ChatRequest,
+) -> tuple[ChatResponse, str, Optional[float]]:
     """
+    Core chat pipeline. Returns (response, intent_label, top_faiss_score).
+
     Router:
       0. Pre-guardrail — instant hardcoded responses for greetings/thanks
       1. classify_intent() — LLM routes to GREETING|CONVERSATION|CODE|OFF_TOPIC
@@ -610,17 +716,20 @@ def chat_endpoint(request: ChatRequest):
       Both CONVERSATION and CODE paths inject history summary when len(history) > 6.
     """
     if _retriever is None or _generator is None:
-        return ChatResponse(
-            explanation="", code=None, language=None,
-            is_fallback=True,
-            fallback_message="Server is still initialising. Please retry in a moment.",
+        return (
+            ChatResponse(
+                explanation="", code=None, language=None,
+                is_fallback=True,
+                fallback_message="Server is still initialising. Please retry in a moment.",
+            ),
+            "UNKNOWN", None,
         )
 
     # ── Step 0: Instant hardcoded handler ─────────────────────────────────────
     conv = _handle_conversational(request.message)
     if conv is not None:
         logger.info("Hardcoded shortcut: %s", request.message[:60])
-        return conv
+        return conv, "GREETING", None
 
     # ── Step 1: LLM intent classification ─────────────────────────────────────
     intent = classify_intent(request.message, request.history)
@@ -628,13 +737,19 @@ def chat_endpoint(request: ChatRequest):
 
     # ── Step 2a: GREETING (belt-and-suspenders) ───────────────────────────────
     if intent == "GREETING":
-        return ChatResponse(explanation=_GREETING_RESPONSE, code=None, language=None,
-                            is_fallback=False, fallback_message=None)
+        return (
+            ChatResponse(explanation=_GREETING_RESPONSE, code=None, language=None,
+                         is_fallback=False, fallback_message=None),
+            "GREETING", None,
+        )
 
     # ── Step 2b: OFF_TOPIC ────────────────────────────────────────────────────
     if intent == "OFF_TOPIC":
-        return ChatResponse(explanation="", code=None, language=None,
-                            is_fallback=True, fallback_message=INVALID_INTENT_MSG)
+        return (
+            ChatResponse(explanation="", code=None, language=None,
+                         is_fallback=True, fallback_message=INVALID_INTENT_MSG),
+            "OFF_TOPIC", None,
+        )
 
     # ── Steps 3–4 shared: summary + retrieval ────────────────────────────────
     summary = _get_summary(request.history)
@@ -645,7 +760,6 @@ def chat_endpoint(request: ChatRequest):
     if retrieval_query != request.message:
         logger.info("Retrieval query enriched: %s", retrieval_query[:100])
 
-    # Choose threshold: CONVERSATION uses looser threshold (natural language scores lower)
     threshold = _THRESHOLD_CONVERSATION if intent == "CONVERSATION" else _THRESHOLD_CODE
 
     try:
@@ -653,20 +767,23 @@ def chat_endpoint(request: ChatRequest):
     except Exception as exc:
         logger.error("Retrieval error: %s", exc, exc_info=True)
         if intent == "CONVERSATION":
-            chunks = []   # fall through to conversational response with no context
+            chunks = []
         else:
-            return ChatResponse(explanation="", code=None, language=None,
-                                is_fallback=True, fallback_message="Retrieval error. Please try again.")
+            return (
+                ChatResponse(explanation="", code=None, language=None,
+                             is_fallback=True, fallback_message="Retrieval error. Please try again."),
+                "CODE", None,
+            )
 
+    top_score: Optional[float] = chunks[0]["score"] if chunks else None
     context = _retriever.format_context(chunks) if chunks else ""
 
     # ── Step 3: CONVERSATION path ─────────────────────────────────────────────
     if intent == "CONVERSATION":
-        # If retrieval found nothing, we still respond using history + LLM knowledge
         if chunks:
             retrieval_result = check_retrieval_confidence(chunks, threshold=threshold)
             if retrieval_result in (RetrievalResult.NO_RESULTS, RetrievalResult.LOW_CONFIDENCE):
-                context = ""  # respond without docs rather than blocking
+                context = ""
 
         raw = generate_conversational_response(
             context=context,
@@ -675,42 +792,47 @@ def chat_endpoint(request: ChatRequest):
             summary=summary,
         )
         if raw is None:
-            return ChatResponse(explanation="", code=None, language=None,
-                                is_fallback=True, fallback_message="API error. Please try again.")
+            return (
+                ChatResponse(explanation="", code=None, language=None,
+                             is_fallback=True, fallback_message="API error. Please try again."),
+                "CONVERSATION", top_score,
+            )
 
         explanation, code, language = parse_llm_response(raw)
-        return ChatResponse(
-            explanation=explanation,
-            code=code,
-            language=language,
-            is_fallback=False,
-            fallback_message=None,
-            attempts=1,
+        return (
+            ChatResponse(explanation=explanation, code=code, language=language,
+                         is_fallback=False, fallback_message=None, attempts=1),
+            "CONVERSATION", top_score,
         )
 
     # ── Step 4: CODE path ─────────────────────────────────────────────────────
-
-    # Layer 1: intent filter (belt-and-suspenders for code generation)
     intent_result = check_intent(request.message)
     if intent_result == IntentResult.INVALID:
         logger.info("L1 rejected: %s", request.message[:60])
-        return ChatResponse(explanation="", code=None, language=None,
-                            is_fallback=True, fallback_message=INVALID_INTENT_MSG)
+        return (
+            ChatResponse(explanation="", code=None, language=None,
+                         is_fallback=True, fallback_message=INVALID_INTENT_MSG),
+            "CODE", None,
+        )
 
-    # Layer 2: retrieval confidence
     retrieval_result = check_retrieval_confidence(chunks, threshold=threshold)
 
     if retrieval_result == RetrievalResult.NO_RESULTS:
         logger.info("L2 rejected (no results): %s", request.message[:60])
-        return ChatResponse(explanation="", code=None, language=None,
-                            is_fallback=True, fallback_message=NO_RESULTS_MSG)
+        return (
+            ChatResponse(explanation="", code=None, language=None,
+                         is_fallback=True, fallback_message=NO_RESULTS_MSG),
+            "CODE", None,
+        )
 
     if retrieval_result == RetrievalResult.LOW_CONFIDENCE:
         logger.info("L2 rejected (low confidence): %s", request.message[:60])
-        return ChatResponse(explanation="", code=None, language=None,
-                            is_fallback=True, fallback_message=LOW_CONFIDENCE_MSG)
+        return (
+            ChatResponse(explanation="", code=None, language=None,
+                         is_fallback=True, fallback_message=LOW_CONFIDENCE_MSG),
+            "CODE", None,
+        )
 
-    # Layer 3: generate + validate + retry
     raw, attempts = generate_with_history_and_retry(
         context=context,
         question=request.message,
@@ -719,18 +841,35 @@ def chat_endpoint(request: ChatRequest):
     )
 
     if raw is None:
-        return ChatResponse(explanation="", code=None, language=None,
-                            is_fallback=True, fallback_message=VALIDATION_FALLBACK_MSG)
+        return (
+            ChatResponse(explanation="", code=None, language=None,
+                         is_fallback=True, fallback_message=VALIDATION_FALLBACK_MSG),
+            "CODE", top_score,
+        )
 
     explanation, code, language = parse_llm_response(raw)
-    return ChatResponse(
-        explanation=explanation,
-        code=code,
-        language=language,
-        is_fallback=False,
-        fallback_message=None,
-        attempts=attempts,
+    return (
+        ChatResponse(explanation=explanation, code=code, language=language,
+                     is_fallback=False, fallback_message=None, attempts=attempts),
+        "CODE", top_score,
     )
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat_endpoint(request: ChatRequest):
+    """Thin wrapper: runs _chat_logic then logs to Supabase (fire-and-forget)."""
+    t0 = int(time.time() * 1000)
+    session_id = request.session_id or "anon"
+
+    _sb_save_message(session_id, "user", request.message)
+
+    response, intent, top_score = _chat_logic(request)
+
+    latency = int(time.time() * 1000) - t0
+    _sb_save_message(session_id, "assistant", _response_text(response))
+    _sb_log_query(session_id, request.message, response, intent, top_score, latency)
+
+    return response
 
 
 # ── Static file serving ───────────────────────────────────────────────────────
