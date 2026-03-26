@@ -709,6 +709,21 @@ async def lifespan(app: FastAPI):
     _retriever = get_retriever()
     _generator = get_generator()
     logger.info("Pipeline ready.")
+
+    # ── Startup env-var warnings ──────────────────────────────────────────────
+    if not os.getenv("SUPABASE_URL") or not os.getenv("SUPABASE_KEY"):
+        logger.warning(
+            "SUPABASE_URL / SUPABASE_KEY not set — "
+            "chat history and knowledge base persistence are DISABLED."
+        )
+    if not os.getenv("SUPABASE_JWT_SECRET"):
+        logger.warning(
+            "SUPABASE_JWT_SECRET not set — "
+            "user authentication is DISABLED (all requests treated as anonymous). "
+            "Set this to your Supabase project JWT secret "
+            "(Dashboard → Settings → API → JWT Settings → JWT Secret)."
+        )
+
     yield
 
 

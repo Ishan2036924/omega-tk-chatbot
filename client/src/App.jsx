@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from './lib/supabaseClient.js'
 import AuthPage from './components/AuthPage.jsx'
 import LeftPanel from './components/LeftPanel.jsx'
@@ -6,7 +6,12 @@ import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
 import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory, loadUserSessions } from './api.js'
 
-const genId = () => Math.random().toString(36).slice(2, 9)
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const LS_KEY = 'omega_session_id'
+const genId  = () => Math.random().toString(36).slice(2, 9)
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Parse a stored bot content string back into ChatResponse-shaped data. */
 function parseStoredBotContent(content) {
@@ -51,20 +56,37 @@ function buildExportMarkdown(session) {
   return md
 }
 
-export default function App() {
-  // ── Auth state ───────────────────────────────────────────────────────────────
-  const [user, setUser]             = useState(null)          // Supabase user object
-  const [accessToken, setAccessToken] = useState(null)        // JWT for API calls
-  const [authLoading, setAuthLoading] = useState(true)        // show nothing until session resolved
+/** Hydrate message rows from Supabase into local message objects. */
+function hydrateMessages(rows) {
+  return rows.map(r => ({
+    id: genId(),
+    role: r.role === 'assistant' ? 'bot' : 'user',
+    text: r.role !== 'assistant' ? r.content : undefined,
+    data: r.role === 'assistant' ? parseStoredBotContent(r.content) : undefined,
+    timestamp: r.created_at || new Date().toISOString(),
+    feedback: null,
+  }))
+}
 
-  // ── App state ────────────────────────────────────────────────────────────────
-  const [sessions, setSessions]           = useState([])
-  const [currentSessionId, setCurrentSessionId] = useState(null)
-  const [isLoading, setIsLoading]         = useState(false)
-  const [leftOpen, setLeftOpen]           = useState(false)
-  const [rightOpen, setRightOpen]         = useState(false)
-  const [view, setView]                   = useState('chat')
-  const [toast, setToast]                 = useState(null)
+// ── App ───────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  // ── Auth state ──────────────────────────────────────────────────────────────
+  const [user, setUser]               = useState(null)
+  const [accessToken, setAccessToken] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)   // true until ALL init steps done
+
+  // ── App state ───────────────────────────────────────────────────────────────
+  const [sessions, setSessions]                   = useState([])
+  const [currentSessionId, setCurrentSessionId]   = useState(null)
+  const [isLoading, setIsLoading]                 = useState(false)
+  const [leftOpen, setLeftOpen]                   = useState(false)
+  const [rightOpen, setRightOpen]                 = useState(false)
+  const [view, setView]                           = useState('chat')
+  const [toast, setToast]                         = useState(null)
+
+  // Prevents onAuthStateChange(INITIAL_SESSION) from doubling up on getSession()
+  const hasInitialized = useRef(false)
 
   const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
   const messages       = currentSession?.messages ?? []
@@ -74,116 +96,137 @@ export default function App() {
     setTimeout(() => setToast(null), 3000)
   }, [])
 
-  // ── Auth: resolve existing session on mount, subscribe to changes ─────────
-  useEffect(() => {
-    // Check if there is an existing Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user)
-        setAccessToken(session.access_token)
+  // ── Core restore: given a valid token, load all sessions + history ──────────
+  const restoreForToken = useCallback(async (token, userObj) => {
+    let rows = []
+    try { rows = await loadUserSessions(token) } catch { /* ok */ }
+
+    if (!rows || rows.length === 0) {
+      // First-time user — create a fresh session
+      const sid = localStorage.getItem(LS_KEY) || genId()
+      localStorage.setItem(LS_KEY, sid)
+      setSessions([{
+        id: sid,
+        title: 'Omega TK Session',
+        messages: [],
+        createdAt: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+      }])
+      setCurrentSessionId(sid)
+      return
+    }
+
+    // Hydrate session list (messages loaded lazily)
+    const hydrated = rows.map(r => ({
+      id: r.id,
+      title: r.title || 'Omega TK Session',
+      messages: [],
+      createdAt: r.created_at || new Date().toISOString(),
+      lastActive: r.last_active || new Date().toISOString(),
+    }))
+    setSessions(hydrated)
+
+    // Pick which session to open: prefer the one from localStorage
+    const stored   = localStorage.getItem(LS_KEY)
+    const targetId = (stored && hydrated.find(s => s.id === stored))
+      ? stored
+      : hydrated[0].id
+    setCurrentSessionId(targetId)
+    localStorage.setItem(LS_KEY, targetId)
+
+    // Load history for the selected session
+    try {
+      const msgRows = await loadHistory(targetId, token)
+      if (msgRows && msgRows.length > 0) {
+        const msgs = hydrateMessages(msgRows)
+        setSessions(prev => prev.map(s =>
+          s.id === targetId ? { ...s, messages: msgs } : s
+        ))
+        showToast(`History restored · ${msgs.length} messages`)
       }
-      setAuthLoading(false)
-    })
+    } catch { /* silently ignore */ }
+  }, [showToast])
 
-    // Listen for login / logout / token refresh events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setUser(session.user)
-        setAccessToken(session.access_token)
-      } else {
-        setUser(null)
-        setAccessToken(null)
-        setSessions([])
-        setCurrentSessionId(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // ── Load all past sessions from Supabase after login ─────────────────────
+  // ── Single-effect sequential auth init ─────────────────────────────────────
   useEffect(() => {
-    if (!user || !accessToken) return
+    let cancelled = false
 
-    loadUserSessions(accessToken).then(rows => {
-      if (!rows || rows.length === 0) {
-        // No history yet — open a fresh session
-        const sid = genId()
-        setSessions([{
-          id: sid,
-          title: 'Omega TK Session',
-          messages: [],
-          createdAt: new Date().toISOString(),
-          lastActive: new Date().toISOString(),
-        }])
-        setCurrentSessionId(sid)
+    async function initialize() {
+      // Step 1: resolve any existing Supabase session
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (cancelled) return
+
+      if (!session) {
+        // Not logged in — show auth page immediately
+        hasInitialized.current = true
+        setAuthLoading(false)
         return
       }
 
-      // Hydrate all sessions from Supabase (messages will be loaded on demand)
-      const hydrated = rows.map(r => ({
-        id: r.id,
-        title: r.title || 'Omega TK Session',
-        messages: [],      // loaded lazily when the session is selected
-        createdAt: r.created_at || new Date().toISOString(),
-        lastActive: r.last_active || new Date().toISOString(),
-      }))
-      setSessions(hydrated)
+      // Step 2: set auth state
+      setUser(session.user)
+      setAccessToken(session.access_token)
 
-      // Auto-select the most recent session and load its messages
-      const mostRecent = hydrated[0]
-      setCurrentSessionId(mostRecent.id)
-      loadHistory(mostRecent.id, accessToken).then(msgRows => {
-        if (!msgRows || msgRows.length === 0) return
-        const msgs = msgRows.map(r => ({
-          id: genId(),
-          role: r.role === 'assistant' ? 'bot' : 'user',
-          text: r.role !== 'assistant' ? r.content : undefined,
-          data: r.role === 'assistant' ? parseStoredBotContent(r.content) : undefined,
-          timestamp: r.created_at || new Date().toISOString(),
-          feedback: null,
-        }))
-        setSessions(prev => prev.map(s =>
-          s.id === mostRecent.id ? { ...s, messages: msgs } : s
-        ))
-        showToast(`History restored · ${msgs.length} messages`)
-      }).catch(() => {})
-    }).catch(() => {
-      // loadUserSessions failed — start fresh
-      const sid = genId()
-      setSessions([{ id: sid, title: 'Omega TK Session', messages: [], createdAt: new Date().toISOString(), lastActive: new Date().toISOString() }])
-      setCurrentSessionId(sid)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, accessToken])
+      // Steps 3-6: restore sessions, pick session, load history
+      await restoreForToken(session.access_token, session.user)
 
-  // ── Select a session and lazily load its messages ─────────────────────────
+      if (!cancelled) {
+        hasInitialized.current = true
+        setAuthLoading(false)
+      }
+    }
+
+    initialize()
+
+    // Subscribe to future auth events — SKIP the INITIAL_SESSION echo
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!hasInitialized.current) return  // still initialising — ignore echo
+
+        if (event === 'SIGNED_IN' && session) {
+          setUser(session.user)
+          setAccessToken(session.access_token)
+          await restoreForToken(session.access_token, session.user)
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null)
+          setAccessToken(null)
+          setSessions([])
+          setCurrentSessionId(null)
+          localStorage.removeItem(LS_KEY)
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          setAccessToken(session.access_token)
+        }
+      }
+    )
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Select a session — lazy-load its messages ───────────────────────────────
   const handleSelectSession = useCallback(async (id) => {
     setCurrentSessionId(id)
     setView('chat')
     setLeftOpen(false)
+    localStorage.setItem(LS_KEY, id)   // persist across refreshes
 
     const session = sessions.find(s => s.id === id)
-    if (!session || session.messages.length > 0) return   // already loaded
+    if (!session || session.messages.length > 0) return  // already loaded
 
     try {
       const rows = await loadHistory(id, accessToken)
       if (!rows || rows.length === 0) return
-      const msgs = rows.map(r => ({
-        id: genId(),
-        role: r.role === 'assistant' ? 'bot' : 'user',
-        text: r.role !== 'assistant' ? r.content : undefined,
-        data: r.role === 'assistant' ? parseStoredBotContent(r.content) : undefined,
-        timestamp: r.created_at || new Date().toISOString(),
-        feedback: null,
-      }))
+      const msgs = hydrateMessages(rows)
       setSessions(prev => prev.map(s => s.id === id ? { ...s, messages: msgs } : s))
     } catch {
-      // silently ignore — session just stays empty
+      // silently ignore — session stays empty
     }
   }, [sessions, accessToken])
 
-  // ── Send a message ────────────────────────────────────────────────────────
+  // ── Send a message ──────────────────────────────────────────────────────────
   const handleSend = useCallback(async (text, file = null) => {
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
@@ -206,8 +249,12 @@ export default function App() {
     let sid = currentSessionId
     if (!sid) {
       sid = genId()
+      localStorage.setItem(LS_KEY, sid)
       const title = trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed
-      setSessions(prev => [{ id: sid, title, messages: [userMsg], createdAt: new Date().toISOString(), lastActive: new Date().toISOString() }, ...prev])
+      setSessions(prev => [{
+        id: sid, title, messages: [userMsg],
+        createdAt: new Date().toISOString(), lastActive: new Date().toISOString()
+      }, ...prev])
       setCurrentSessionId(sid)
     } else {
       setSessions(prev => prev.map(s => {
@@ -242,7 +289,7 @@ export default function App() {
     }
   }, [currentSessionId, messages, isLoading, accessToken])
 
-  // ── Feedback (thumbs up/down) ─────────────────────────────────────────────
+  // ── Feedback ────────────────────────────────────────────────────────────────
   const handleFeedback = useCallback((msgId, type) => {
     setSessions(prev => prev.map(s =>
       s.id === currentSessionId
@@ -252,7 +299,7 @@ export default function App() {
     submitFeedback(currentSessionId, msgId, type, accessToken)
   }, [currentSessionId, accessToken])
 
-  // ── Export ────────────────────────────────────────────────────────────────
+  // ── Export ──────────────────────────────────────────────────────────────────
   const handleExport = useCallback(() => {
     if (!currentSession) return
     const md = buildExportMarkdown(currentSession)
@@ -265,9 +312,10 @@ export default function App() {
     URL.revokeObjectURL(url)
   }, [currentSession])
 
-  // ── New chat ──────────────────────────────────────────────────────────────
+  // ── New chat ────────────────────────────────────────────────────────────────
   const handleNewChat = useCallback(() => {
     const sid = genId()
+    localStorage.setItem(LS_KEY, sid)
     setCurrentSessionId(sid)
     setSessions(prev => [{
       id: sid, title: 'Omega TK Session', messages: [],
@@ -277,13 +325,13 @@ export default function App() {
     setLeftOpen(false)
   }, [])
 
-  // ── Logout ────────────────────────────────────────────────────────────────
+  // ── Logout ──────────────────────────────────────────────────────────────────
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut()
-    // onAuthStateChange will clear user + accessToken + sessions
+    // onAuthStateChange(SIGNED_OUT) clears all state + localStorage
   }, [])
 
-  // ── Right panel data ──────────────────────────────────────────────────────
+  // ── Right panel derived data ────────────────────────────────────────────────
   const lastBot = messages.filter(m => m.role === 'bot').at(-1)
   const queryDetails = {
     isFallback: lastBot?.data?.is_fallback ?? false,
@@ -296,13 +344,14 @@ export default function App() {
     down: messages.filter(m => m.feedback === 'down').length,
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────────────
 
-  // While Supabase resolves the existing session, show nothing (avoids flash)
+  // Block until we've finished resolving the session (avoids flash + race)
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-sidebar">
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-sidebar">
         <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <p className="text-white/40 text-xs">Restoring your session…</p>
       </div>
     )
   }
@@ -312,7 +361,7 @@ export default function App() {
     return <AuthPage onLogin={setUser} />
   }
 
-  // Authenticated — show the main three-panel layout
+  // Authenticated — three-panel layout
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 font-sans">
 
@@ -331,7 +380,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Left Panel ─────────────────────────────────── */}
+      {/* ── Left Panel ──────────────────────────────────────── */}
       <div className={`
         fixed lg:relative z-30 lg:z-auto h-full panel-slide
         ${leftOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -348,7 +397,7 @@ export default function App() {
         />
       </div>
 
-      {/* ── Middle Panel ───────────────────────────────── */}
+      {/* ── Middle Panel ────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 h-full">
         <MiddlePanel
           session={currentSession}
@@ -365,7 +414,7 @@ export default function App() {
         />
       </div>
 
-      {/* ── Right Panel ────────────────────────────────── */}
+      {/* ── Right Panel ─────────────────────────────────────── */}
       <div className={`
         fixed right-0 lg:relative z-30 lg:z-auto h-full panel-slide
         ${rightOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
