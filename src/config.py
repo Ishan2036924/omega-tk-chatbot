@@ -29,7 +29,7 @@ CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
 # Retrieval settings
-TOP_K = 3
+TOP_K = 5
 SIMILARITY_THRESHOLD = 0.3
 
 # LLM settings

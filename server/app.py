@@ -749,19 +749,34 @@ def _retrieve(query: str, threshold: float) -> list[dict]:
     """
     Retrieve FAISS chunks with a custom similarity threshold.
     Bypasses the hard-coded SIMILARITY_THRESHOLD in src/config.py.
+
+    Query is embedded as "Question: {query}" to match the new triplet index format.
+    Gold-standard chunks (is_gold_standard=True) receive a +0.10 score boost.
+    Returns top-5 (TOP_K updated in config.py).
     """
     from config import TOP_K
-    emb = _retriever.embed_query(query)
-    scores, indices = _retriever.index.search(emb, TOP_K)
+    # Embed query in the same format used at ingest time
+    embed_query = f"Question: {query}"
+    emb = _retriever.embed_query(embed_query)
+    # Retrieve a wider candidate set so boosting doesn't miss gold chunks
+    candidate_k = max(TOP_K * 3, 15)
+    scores, indices = _retriever.index.search(emb, candidate_k)
     results = []
     for score, idx in zip(scores[0], indices[0]):
         if idx < 0:
             continue
-        if score >= threshold:
-            chunk = _retriever.chunks[idx].copy()
-            chunk["score"] = float(score)
-            results.append(chunk)
-    return results
+        raw_score = float(score)
+        if raw_score < threshold:
+            continue
+        chunk = _retriever.chunks[idx].copy()
+        # Boost gold-standard chunks by 0.10
+        if chunk.get("is_gold_standard"):
+            raw_score = min(1.0, raw_score + 0.10)
+        chunk["score"] = raw_score
+        results.append(chunk)
+    # Re-sort after boosting and trim to TOP_K
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results[:TOP_K]
 
 
 def parse_llm_response(raw: str) -> tuple[str, Optional[str], str]:
@@ -1579,7 +1594,35 @@ def _chat_logic(
             logger.warning("Knowledge retrieval error: %s", kexc)
 
     # ── Build merged context ──────────────────────────────────────────────────
-    faiss_context = _retriever.format_context(chunks) if chunks else ""
+    # Format FAISS chunks using structured Q/A/Code/Source format when available
+    if chunks:
+        chunk_parts = []
+        for ci, ch in enumerate(chunks, 1):
+            q    = ch.get("question", "").strip()
+            a    = ch.get("answer", "").strip()
+            code = ch.get("code", "").strip()
+            src  = ch.get("source", ch.get("source_url", "")).strip()
+            if q or a or code:
+                # New triplet format
+                part = f"Context chunk {ci}:"
+                if q:
+                    part += f"\nQ: {q}"
+                if a:
+                    part += f"\nA: {a}"
+                if code:
+                    part += f"\nCode:\n```python\n{code}\n```"
+                if src:
+                    part += f"\nSource: {src}"
+            else:
+                # Legacy flat-text chunks (fallback)
+                part = f"Context chunk {ci}:\n{ch.get('text', '')}"
+                if src:
+                    part += f"\nSource: {src}"
+            chunk_parts.append(part)
+        faiss_context = "\n\n".join(chunk_parts)
+    else:
+        faiss_context = ""
+
     if knowledge_chunks:
         kb_text = "\n\n".join(
             f"[Knowledge Base — {c['source']}]\n{c['text']}"
