@@ -163,6 +163,27 @@ export async function loadUserSessions(token) {
 // ── Knowledge base ────────────────────────────────────────────────────────────
 
 /**
+ * Load ALL knowledge sources for the authenticated user across every session.
+ * Uses the dedicated /api/knowledge/me endpoint — no session_id needed.
+ * Called during app initialisation so sources are available immediately.
+ *
+ * @param {string} token — Supabase JWT access token (required)
+ * @returns {Promise<Array>}
+ */
+export async function loadMyKnowledge(token) {
+  if (!token) return []
+  try {
+    const res = await fetch(`${BASE_URL}/api/knowledge/me`, {
+      headers: withAuth({}, token),
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
+}
+
+/**
  * Add pasted text to the knowledge base.
  */
 export async function addKnowledge(text, source, sessionId, token = null) {

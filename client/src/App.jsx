@@ -4,7 +4,7 @@ import AuthPage from './components/AuthPage.jsx'
 import LeftPanel from './components/LeftPanel.jsx'
 import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
-import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory, loadUserSessions } from './api.js'
+import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory, loadUserSessions, loadMyKnowledge } from './api.js'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -89,6 +89,12 @@ export default function App() {
   //   • responses are routed by the sessionId captured at send-time, not at arrival-time
   const [messagesMap, setMessagesMap] = useState({})
 
+  // ── Knowledge Base — user-scoped, loaded once at init, shared across sessions ─
+  // Sources belong to the USER, not any individual session. Stored here so the
+  // KnowledgePanel never has to fetch on mount — it receives data as props.
+  const [knowledgeSources, setKnowledgeSources]       = useState([])
+  const [isLoadingKnowledge, setIsLoadingKnowledge]   = useState(false)
+
   // ── Other UI state ──────────────────────────────────────────────────────────
   const [isLoading, setIsLoading]   = useState(false)
   const [leftOpen, setLeftOpen]     = useState(false)
@@ -124,6 +130,25 @@ export default function App() {
   const showToast = useCallback((msg) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
+  }, [])
+
+  // ── Knowledge sources — fetch/refresh for the authenticated user ─────────────
+  // Accepts the token as a parameter so it can be called from restoreForToken
+  // (where accessToken state may not yet be committed) and from event handlers
+  // (where accessToken IS in state — pass it directly).
+  const refreshKnowledge = useCallback(async (token) => {
+    if (!token) return
+    console.log('[KB] Loading knowledge sources for user…')
+    setIsLoadingKnowledge(true)
+    try {
+      const sources = await loadMyKnowledge(token)
+      console.log('[KB]', sources?.length ?? 0, 'source(s) loaded')
+      setKnowledgeSources(sources || [])
+    } catch {
+      setKnowledgeSources([])
+    } finally {
+      setIsLoadingKnowledge(false)
+    }
   }, [])
 
   // ── Core restore: given a valid token, load all sessions + history ──────────
@@ -166,18 +191,19 @@ export default function App() {
     setCurrentSessionId(targetId)
     localStorage.setItem(LS_KEY, targetId)
 
-    // Load history for the selected session
-    try {
-      console.log('[Restore] Loading history for session:', targetId)
-      const msgRows = await loadHistory(targetId, token)
-      console.log('[Restore] History rows received:', msgRows?.length ?? 0)
-      if (msgRows && msgRows.length > 0) {
-        const msgs = hydrateMessages(msgRows)
-        setMessagesMap(prev => ({ ...prev, [targetId]: msgs }))
-        showToast(`History restored · ${msgs.length} messages`)
-      }
-    } catch { /* silently ignore */ }
-  }, [showToast])
+    // Load history + knowledge sources in parallel — neither blocks the other
+    console.log('[Restore] Loading history + knowledge sources in parallel…')
+    const [msgRows] = await Promise.all([
+      loadHistory(targetId, token).catch(() => []),
+      refreshKnowledge(token),        // sets knowledgeSources state directly
+    ])
+    console.log('[Restore] History rows received:', msgRows?.length ?? 0)
+    if (msgRows && msgRows.length > 0) {
+      const msgs = hydrateMessages(msgRows)
+      setMessagesMap(prev => ({ ...prev, [targetId]: msgs }))
+      showToast(`History restored · ${msgs.length} messages`)
+    }
+  }, [showToast, refreshKnowledge])
 
   // ── Single-effect sequential auth init ─────────────────────────────────────
   useEffect(() => {
@@ -249,6 +275,7 @@ export default function App() {
           setAccessToken(null)
           setSessions([])
           setMessagesMap({})
+          setKnowledgeSources([])
           setCurrentSessionId(null)
           currentUserIdRef.current = null
           localStorage.removeItem(LS_KEY)
@@ -507,6 +534,7 @@ export default function App() {
           onSelectView={setView}
           user={user}
           onLogout={handleLogout}
+          knowledgeSourceCount={knowledgeSources.length}
         />
       </div>
 
@@ -524,6 +552,9 @@ export default function App() {
           view={view}
           sessionId={currentSessionId}
           accessToken={accessToken}
+          knowledgeSources={knowledgeSources}
+          isLoadingKnowledge={isLoadingKnowledge}
+          onRefreshKnowledge={() => refreshKnowledge(accessToken)}
         />
       </div>
 

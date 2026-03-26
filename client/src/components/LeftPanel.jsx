@@ -37,6 +37,7 @@ export default function LeftPanel({
   onSelectView,
   user,
   onLogout,
+  knowledgeSourceCount = 0,
 }) {
   // First letter of email for the avatar
   const avatarLetter = user?.email?.[0]?.toUpperCase() ?? '?'
@@ -78,7 +79,13 @@ export default function LeftPanel({
               `}
             >
               <Icon size={16} />
-              <span>{label}</span>
+              <span className="flex-1 text-left">{label}</span>
+              {/* Knowledge Base source count badge */}
+              {id === 'knowledge' && knowledgeSourceCount > 0 && (
+                <span className="text-[9px] font-bold bg-purple-500/25 text-purple-300 rounded-full px-1.5 py-0.5 leading-none tabular-nums">
+                  {knowledgeSourceCount}
+                </span>
+              )}
             </button>
           )
         })}

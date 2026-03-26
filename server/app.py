@@ -1348,6 +1348,59 @@ async def add_knowledge_file_endpoint(
     }
 
 
+@app.get("/api/knowledge/me")
+def list_my_knowledge_endpoint(
+    user_id: Optional[str] = Depends(get_current_user),
+):
+    """
+    Return all knowledge sources for the authenticated user across all sessions.
+    Requires a valid JWT — returns 401 when unauthenticated.
+    This endpoint must be registered BEFORE /api/knowledge/{session_id} so FastAPI
+    does not match the literal string "me" as a session_id path parameter.
+    """
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    sb = _get_supabase()
+    if sb is None:
+        return []
+    try:
+        rows = (
+            sb.table("knowledge_chunks")
+            .select("id, source, created_at, judge_score")
+            .eq("user_id", user_id)
+            .order("created_at", desc=False)
+            .execute()
+            .data
+        )
+        sources: dict[str, dict] = {}
+        for r in rows:
+            src = r["source"]
+            if src not in sources:
+                sources[src] = {
+                    "id":          r["id"],
+                    "source":      src,
+                    "chunk_count": 0,
+                    "created_at":  r["created_at"],
+                    "_score_sum":  0.0,
+                    "_score_n":    0,
+                }
+            sources[src]["chunk_count"] += 1
+            js = r.get("judge_score")
+            if js is not None:
+                sources[src]["_score_sum"] += float(js)
+                sources[src]["_score_n"]   += 1
+        result = []
+        for s in sources.values():
+            n = s.pop("_score_n")
+            total = s.pop("_score_sum")
+            s["avg_judge_score"] = round(total / n, 3) if n > 0 else None
+            result.append(s)
+        return result
+    except Exception as exc:
+        logger.warning("list_my_knowledge failed: %s", exc)
+        return []
+
+
 @app.get("/api/knowledge/{session_id}")
 def list_knowledge_endpoint(
     session_id: str,

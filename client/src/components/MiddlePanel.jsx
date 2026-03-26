@@ -10,6 +10,7 @@ export default function MiddlePanel({
   onSend, onFeedback, onExport,
   onToggleLeft, onToggleRight,
   view, sessionId, accessToken,
+  knowledgeSources, isLoadingKnowledge, onRefreshKnowledge,
 }) {
   const hasMessages = messages.length > 0
 
@@ -43,7 +44,13 @@ export default function MiddlePanel({
           </div>
         </div>
         <div className="flex-1 min-h-0">
-          <KnowledgePanel sessionId={sessionId} token={accessToken} />
+          <KnowledgePanel
+            sessionId={sessionId}
+            token={accessToken}
+            sources={knowledgeSources}
+            isLoadingSources={isLoadingKnowledge}
+            onRefreshSources={onRefreshKnowledge}
+          />
         </div>
       </div>
     )

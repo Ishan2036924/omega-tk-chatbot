@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import {
   BookOpen, Upload, Plus, Trash2, FileText,
   AlertCircle, CheckCircle, X, Loader2,
 } from 'lucide-react'
-import { addKnowledge, addKnowledgeFile, listKnowledge, deleteKnowledge } from '../api.js'
+import { addKnowledge, addKnowledgeFile, deleteKnowledge } from '../api.js'
 
 const ACCEPTED      = '.pdf,.md,.txt,.png,.jpg,.jpeg'
 const MAX_CHARS     = 20_000  // soft cap shown in counter
@@ -88,7 +88,7 @@ function SourceItem({ item, onDelete, isDeleting }) {
         </div>
       </div>
       <button
-        onClick={() => onDelete(item.id, item.source)}
+        onClick={() => onDelete(item.id)}
         disabled={isDeleting === item.id}
         className="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40 flex-shrink-0"
         aria-label={`Delete ${item.source}`}
@@ -117,7 +117,28 @@ function SkeletonRow() {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-export default function KnowledgePanel({ sessionId, token = null }) {
+/**
+ * KnowledgePanel
+ *
+ * Props:
+ *   sessionId         — current chat session ID (used when adding new chunks)
+ *   token             — Supabase JWT access token
+ *   sources           — array of source objects from App.jsx global state
+ *   isLoadingSources  — true while App.jsx is fetching sources on init
+ *   onRefreshSources  — callback: tells App.jsx to re-fetch from /api/knowledge/me
+ *
+ * Sources are owned by the USER (not the session). They are fetched once during
+ * app initialisation and passed down here — KnowledgePanel never self-fetches.
+ * After any add/delete operation it calls onRefreshSources() to keep App state
+ * in sync, which automatically propagates back here via props.
+ */
+export default function KnowledgePanel({
+  sessionId,
+  token = null,
+  sources = [],
+  isLoadingSources = false,
+  onRefreshSources,
+}) {
   // Text-paste state
   const [pasteText, setPasteText]   = useState('')
   const [sourceName, setSourceName] = useState('')
@@ -131,26 +152,8 @@ export default function KnowledgePanel({ sessionId, token = null }) {
   const [isDragging, setIsDragging]     = useState(false)
   const fileInputRef                    = useRef(null)
 
-  // Sources list state
-  const [sources, setSources]             = useState([])
-  const [isLoadingSources, setIsLoadingSources] = useState(false)
-  const [isDeleting, setIsDeleting]       = useState(null)
-
-  // ── Load sources ──────────────────────────────────────────────────────────
-  const loadSources = useCallback(async () => {
-    if (!sessionId) return
-    setIsLoadingSources(true)
-    try {
-      const data = await listKnowledge(sessionId, token)
-      setSources(data || [])
-    } catch {
-      setSources([])
-    } finally {
-      setIsLoadingSources(false)
-    }
-  }, [sessionId, token])
-
-  useEffect(() => { loadSources() }, [loadSources])
+  // Per-row delete spinner
+  const [isDeleting, setIsDeleting] = useState(null)
 
   // ── Add pasted text ───────────────────────────────────────────────────────
   const handleAddText = async () => {
@@ -174,7 +177,7 @@ export default function KnowledgePanel({ sessionId, token = null }) {
         })
         setPasteText('')
         setSourceName('')
-        await loadSources()
+        onRefreshSources?.()
       }
     } catch (err) {
       setTextResult({ type: 'error', msg: err.message })
@@ -213,7 +216,7 @@ export default function KnowledgePanel({ sessionId, token = null }) {
           msg: `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${res.source}"${pct}`,
         })
         setPendingFile(null)
-        await loadSources()
+        onRefreshSources?.()
       }
     } catch (err) {
       setFileResult({ type: 'error', msg: err.message })
@@ -222,13 +225,14 @@ export default function KnowledgePanel({ sessionId, token = null }) {
     }
   }
 
-  const handleDelete = async (chunkId, source) => {
+  const handleDelete = async (chunkId) => {
     setIsDeleting(chunkId)
     try {
       await deleteKnowledge(chunkId, token)
-      setSources(prev => prev.filter(s => s.id !== chunkId))
+      // Delegate the update to App-level state — onRefreshSources re-fetches
+      // from the server so the list reflects the actual DB state.
+      onRefreshSources?.()
     } catch (err) {
-      // surface as file result banner — convenient spot
       setFileResult({ type: 'error', msg: `Delete failed: ${err.message}` })
     } finally {
       setIsDeleting(null)
