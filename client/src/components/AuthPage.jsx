@@ -7,7 +7,10 @@ import { Zap, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react'
  * Matches the existing dark purple sidebar colour palette.
  *
  * Props:
- *   onLogin(user) — called with the Supabase user object on successful auth.
+ *   onLogin(user, accessToken) — called with the Supabase user object and the
+ *     session access token on successful auth. Passing the token here ensures
+ *     App.jsx sets both user + accessToken atomically so the main layout
+ *     never renders with a null token.
  */
 export default function AuthPage({ onLogin }) {
   const [mode, setMode]         = useState('login')   // 'login' | 'signup'
@@ -42,7 +45,8 @@ export default function AuthPage({ onLogin }) {
           password,
         })
         if (sbErr) throw sbErr
-        if (data?.user) onLogin(data.user)
+        // Pass both user and access_token so App.jsx sets both atomically
+        if (data?.user) onLogin(data.user, data.session?.access_token ?? null)
       } else {
         const { data, error: sbErr } = await supabase.auth.signUp({
           email: email.trim(),
@@ -54,7 +58,7 @@ export default function AuthPage({ onLogin }) {
           setInfo('An account with this email already exists. Try signing in.')
         } else if (data?.session) {
           // Email confirmation disabled — user is immediately logged in
-          onLogin(data.user)
+          onLogin(data.user, data.session?.access_token ?? null)
         } else {
           setInfo('Account created! Check your email to confirm, then sign in.')
           setMode('login')

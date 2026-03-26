@@ -88,6 +88,12 @@ export default function App() {
   // Prevents onAuthStateChange(INITIAL_SESSION) from doubling up on getSession()
   const hasInitialized = useRef(false)
 
+  // Tracks the currently-logged-in user ID so onAuthStateChange(SIGNED_IN) can
+  // distinguish "fresh login" from "silent token refresh on tab focus".
+  // Using a ref (not state) so the async onAuthStateChange closure always reads
+  // the latest value without needing to be recreated.
+  const currentUserIdRef = useRef(null)
+
   const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
   const messages       = currentSession?.messages ?? []
 
@@ -98,13 +104,16 @@ export default function App() {
 
   // ── Core restore: given a valid token, load all sessions + history ──────────
   const restoreForToken = useCallback(async (token, userObj) => {
+    console.log('[Restore] Loading sessions from API…')
     let rows = []
     try { rows = await loadUserSessions(token) } catch { /* ok */ }
+    console.log('[Restore] API returned', rows?.length ?? 0, 'session(s)')
 
     if (!rows || rows.length === 0) {
       // First-time user — create a fresh session
       const sid = localStorage.getItem(LS_KEY) || genId()
       localStorage.setItem(LS_KEY, sid)
+      console.log('[Restore] No sessions on server — new session:', sid)
       setSessions([{
         id: sid,
         title: 'Omega TK Session',
@@ -131,12 +140,15 @@ export default function App() {
     const targetId = (stored && hydrated.find(s => s.id === stored))
       ? stored
       : hydrated[0].id
+    console.log('[Restore] localStorage had:', stored, '→ opening session:', targetId)
     setCurrentSessionId(targetId)
     localStorage.setItem(LS_KEY, targetId)
 
     // Load history for the selected session
     try {
+      console.log('[Restore] Loading history for session:', targetId)
       const msgRows = await loadHistory(targetId, token)
+      console.log('[Restore] History rows received:', msgRows?.length ?? 0)
       if (msgRows && msgRows.length > 0) {
         const msgs = hydrateMessages(msgRows)
         setSessions(prev => prev.map(s =>
@@ -159,17 +171,23 @@ export default function App() {
 
       if (!session) {
         // Not logged in — show auth page immediately
+        console.log('[Auth] No existing session — showing login page')
         hasInitialized.current = true
         setAuthLoading(false)
         return
       }
 
-      // Step 2: set auth state
+      console.log('[Auth] Existing session found for', session.user.email)
+
+      // Step 2: set auth state + track user ID in ref
       setUser(session.user)
       setAccessToken(session.access_token)
+      currentUserIdRef.current = session.user.id
 
       // Steps 3-6: restore sessions, pick session, load history
+      console.log('[Auth] Restoring sessions and history…')
       await restoreForToken(session.access_token, session.user)
+      console.log('[Auth] Restore complete — rendering UI')
 
       if (!cancelled) {
         hasInitialized.current = true
@@ -185,16 +203,37 @@ export default function App() {
         if (!hasInitialized.current) return  // still initialising — ignore echo
 
         if (event === 'SIGNED_IN' && session) {
+          const isFreshLogin = currentUserIdRef.current !== session.user.id
+          console.log(
+            '[Auth] SIGNED_IN event — isFreshLogin:', isFreshLogin,
+            '(currentUserIdRef:', currentUserIdRef.current,
+            '→ new:', session.user.id, ')'
+          )
+
+          // Always update user + token
           setUser(session.user)
           setAccessToken(session.access_token)
-          await restoreForToken(session.access_token, session.user)
+          currentUserIdRef.current = session.user.id
+
+          if (isFreshLogin) {
+            // Genuine login (user was null or different) — run full restore
+            console.log('[Auth] Fresh login detected — restoring sessions and history')
+            await restoreForToken(session.access_token, session.user)
+          } else {
+            // Same user, token refresh (e.g., tab focus after ~1h) — do NOT
+            // wipe session state; just updating accessToken above is enough.
+            console.log('[Auth] Token refresh for same user — skipping re-init')
+          }
         } else if (event === 'SIGNED_OUT') {
+          console.log('[Auth] SIGNED_OUT — clearing all state')
           setUser(null)
           setAccessToken(null)
           setSessions([])
           setCurrentSessionId(null)
+          currentUserIdRef.current = null
           localStorage.removeItem(LS_KEY)
         } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('[Auth] TOKEN_REFRESHED — updating access token only')
           setAccessToken(session.access_token)
         }
       }
@@ -208,23 +247,28 @@ export default function App() {
 
   // ── Select a session — lazy-load its messages ───────────────────────────────
   const handleSelectSession = useCallback(async (id) => {
+    console.log('[Session] Switching to session:', id)
+
+    // 1. Clear current messages immediately — guarantees no stale bleed while loading
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, messages: [] } : s))
+
+    // 2. Update session + localStorage atomically before any async work
     setCurrentSessionId(id)
     setView('chat')
     setLeftOpen(false)
-    localStorage.setItem(LS_KEY, id)   // persist across refreshes
+    localStorage.setItem(LS_KEY, id)
 
-    const session = sessions.find(s => s.id === id)
-    if (!session || session.messages.length > 0) return  // already loaded
-
+    // 3. Load history from server (always — ensures fresh data on every explicit switch)
     try {
       const rows = await loadHistory(id, accessToken)
+      console.log('[Session] Loaded', rows?.length ?? 0, 'messages for session:', id)
       if (!rows || rows.length === 0) return
       const msgs = hydrateMessages(rows)
       setSessions(prev => prev.map(s => s.id === id ? { ...s, messages: msgs } : s))
     } catch {
       // silently ignore — session stays empty
     }
-  }, [sessions, accessToken])
+  }, [accessToken])
 
   // ── Send a message ──────────────────────────────────────────────────────────
   const handleSend = useCallback(async (text, file = null) => {
@@ -358,7 +402,17 @@ export default function App() {
 
   // Not authenticated — show full-screen login / signup
   if (!user) {
-    return <AuthPage onLogin={setUser} />
+    return (
+      <AuthPage
+        onLogin={(usr, tok) => {
+          // Set both user + token atomically so the main layout
+          // never renders with a null accessToken.
+          console.log('[Auth] AuthPage onLogin — user:', usr?.email, 'hasToken:', !!tok)
+          if (tok) setAccessToken(tok)
+          setUser(usr)
+        }}
+      />
+    )
   }
 
   // Authenticated — three-panel layout
