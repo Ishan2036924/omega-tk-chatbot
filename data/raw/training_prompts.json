@@ -617,6 +617,739 @@
     "question": "'Read a molecule from a file into OEChem'",
     "answer": "'Read a molecule from a file into OEChem'",
     "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Write a molecule from OEChem'",
+    "answer": "'Write a molecule from OEChem'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate conformations for my molecule with Omega\"",
+    "answer": "\"Generate conformations for my molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate conformations for my database of molecules\"",
+    "answer": "\"Generate conformations for my database of molecules\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry in my molecule with Omega\"",
+    "answer": "\"Enumerate unspecified stereochemistry in my molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for my database of molecules with Omega\"",
+    "answer": "\"Enumerate unspecified stereochemistry for my database of molecules with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters\"",
+    "answer": "\"Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nopts\n.\nSetMaxCenters\n(\n3\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters\"",
+    "answer": "\"Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nopts\n.\nSetMaxCenters\n(\n5\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega\"",
+    "answer": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nomega_opts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomega_opts\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\nimol\n=\noechem\n.\nOEMol\n(\nisomer\n)\nret_code\n=\nomega\n.\nBuild\n(\nimol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nimol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database\"",
+    "answer": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nomega_opts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomega_opts\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\nimol\n=\noechem\n.\nOEMol\n(\nisomer\n)\nret_code\n=\nomega\n.\nBuild\n(\nimol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nimol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega with max confs of 1\"",
+    "answer": "\"Generate 3D conformations with Omega with max confs of 1\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetMaxConfs\n(\n1\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations using with Omega for docking\"",
+    "answer": "\"Generate 3D conformations using with Omega for docking\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Pose\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations using Omega for ROCS\"",
+    "answer": "\"Generate 3D conformations using Omega for ROCS\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_ROCS\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Generate 3D conformations with Omega for FastROCS\"",
+    "answer": "'Generate 3D conformations with Omega for FastROCS\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_FastROCS\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega for freeform\"",
+    "answer": "\"Generate 3D conformations with Omega for freeform\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Dense\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with GPU Omega\"",
+    "answer": "\"Generate 3D conformations with GPU Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetUseGPU\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega using thompson sampling\"",
+    "answer": "\"Generate 3D conformations with Omega using thompson sampling\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetUseThompson\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformastions with Omega using alternative torsion library\"",
+    "answer": "\"Generate 3D conformastions with Omega using alternative torsion library\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetTorLib\n(\noeomega\n.\nOETorLibType_GubaV21\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega using electrostatics\"",
+    "answer": "\"Generate 3D conformations with Omega using electrostatics\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetForceField\n(\n'mmff94s_Sheff'\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with a fixed substructure\n\"",
+    "answer": "\"Generate 3D conformations with a fixed substructure\n\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nss\n=\noechem\n.\nOESubSearch\n(\n'<SMILES string>'\n)\nss\n.\nSetMaxMatches\n(\n1\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixSubSearch\n(\nss\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with a fixed substructure given a SMARTS patttern\"",
+    "answer": "\"Generate 3D conformations with a fixed substructure given a SMARTS patttern\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixSmarts\n(\n'<SMARTS String>'\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a molecule and hold a piece of the molecule fixed\"",
+    "answer": "\"Generate 3D conformations of a molecule and hold a piece of the molecule fixed\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfixed_fs\n=\noechem\n.\noemolistream\n(\nargv\n[\n3\n])\nfixed_mol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nfixed_fs\n,\nfixed_mol\n)\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixMol\n(\nfixed_mol\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations and apply MCS constraint on a portion of my molecule\"",
+    "answer": "\"Generate 3D conformations and apply MCS constraint on a portion of my molecule\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfixed_fs\n=\noechem\n.\noemolistream\n(\nargv\n[\n3\n])\nfixed_mol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nfixed_fs\n,\nfixed_mol\n)\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixMol\n(\nfixed_mol\n)\nconf_fix_options\n.\nSetFixMCS\n(\nTrue\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a macrocycle molecule with Omega\"",
+    "answer": "\"Generate 3D conformations of a macrocycle molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a macrocycle molecule in a specific solution\"",
+    "answer": "\"Generate 3D conformations of a macrocycle molecule in a specific solution\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\n# Set Dielectric Constant to change solution type. This is dielectric constant of water.\nmc_builder_opts\n=\noeomega\n.\nOEMacrocycleBuilderOptions\n()\nmc_builder_opts\n.\nSetDielectricConst\n(\n80.0\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nopts\n.\nSetMacrocycleBuilderOptions\n(\nmc_builder_opts\n)\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformation of a macrocycle\"",
+    "answer": "\"Generate 3D conformation of a macrocycle\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nopts\n.\nSetMaxConfs\n(\n1\n)\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Calculate the number of stereocenters of a molecule with Omega\"",
+    "answer": "\"Calculate the number of stereocenters of a molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nnum_centers\n=\noeomega\n.\nOEFlipperStereoCenters\n(\nmol\n,\nopts\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Check if molecule is a macrocycle\"",
+    "answer": "\"Check if molecule is a macrocycle\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nif\noeomega\n.\nOEIsMacrocycle\n(\nmol\n):\nprint\n(\n'Yes, this molecule is a macrocycle'\n)\nelse\n:\nprint\n(\n'No this is not a macrocycle'\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Remove duplicate conformers from ensemble\"",
+    "answer": "\"Remove duplicate conformers from ensemble\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nslice_ensemble_opts\n=\noeomega\n.\nOESliceEnsembleOptions\n()\nconf_slicer\n=\noeomega\n.\nOEConfSlicer\n(\nslice_ensemble_opts\n)\nif\nconf_slicer\n.\nSlice\n(\nmol\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Write out conformer energy'",
+    "answer": "'Write out conformer energy'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetSDEnergy\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate Missing Fragments from input database with Omega\"",
+    "answer": "\"Generate Missing Fragments from input database with Omega\"",
+    "code": "In\u00a0[21]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nmake_lib\n=\noeomega\n.\nOEMakeFragLib\n()\nmake_lib\n.\nAddFragLib\n()\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmake_lib\n.\nGenerateMissingFrags\n(\nifs\n,\nofs\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Retrieve Missing Fragments from fragment library in Omega\"",
+    "answer": "\"Retrieve Missing Fragments from fragment library in Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nmake_lib\n=\noeomega\n.\nOEMakeFragLib\n()\nmake_lib\n.\nAddFragLib\n()\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfor\nmol\nin\nmake_lib\n.\nGetMissingFrags\n(\nifs\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "How do I enumerate stereoisomers using OEFlipper?",
+    "answer": "OEFlipper is a generator FUNCTION, not a class. Do NOT call .Build() on it. Iterate over it directly with a for loop. Each iteration yields a stereo-enumerated copy of the input molecule. Use OEFlipperOptions to configure maximum stereocenters.",
+    "code": "from openeye import oechem, oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEFlipperOptions()\nopts.SetMaxCenters(5)\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol, opts):\n        oechem.OEWriteMolecule(ofs, isomer)\n\nofs.close()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [
+      "oechem.oemolistream",
+      "oechem.oemolostream",
+      "oeomega.OEFlipperOptions",
+      "oeomega.OEFlipper",
+      "oechem.OEWriteMolecule"
+    ],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "How do I handle Omega return codes and errors",
+    "answer": "Call omega.Build(mol) and capture its integer return code. Compare it against OEOmegaReturnCode_Success to determine whether conformer generation succeeded. On failure, pass the return code to OEGetOmegaError(ret_code) to retrieve a human-readable error string \u2014 this tells you exactly why the build failed (e.g. no rotatable bonds found, stereo conflict, insufficient atoms).",
+    "code": "from openeye import oechem, oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs, mol)\n    else:\n        oechem.OEThrow.Warning(\n            \"%s: %s\" % (mol.GetTitle(), oeomega.OEGetOmegaError(ret_code))\n        )\n\nofs.close()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [
+      "oechem.oemolistream",
+      "oechem.oemolostream",
+      "oeomega.OEOmegaOptions",
+      "oeomega.OEOmegaSampling_Classic",
+      "oeomega.OEOmega",
+      "oeomega.OEOmegaReturnCode_Success"
+    ],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Read a molecule from a file into OEChem'",
+    "answer": "'Read a molecule from a file into OEChem'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Write a molecule from OEChem'",
+    "answer": "'Write a molecule from OEChem'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate conformations for my molecule with Omega\"",
+    "answer": "\"Generate conformations for my molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate conformations for my database of molecules\"",
+    "answer": "\"Generate conformations for my database of molecules\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry in my molecule with Omega\"",
+    "answer": "\"Enumerate unspecified stereochemistry in my molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for my database of molecules with Omega\"",
+    "answer": "\"Enumerate unspecified stereochemistry for my database of molecules with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters\"",
+    "answer": "\"Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nopts\n.\nSetMaxCenters\n(\n3\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters\"",
+    "answer": "\"Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nopts\n.\nSetMaxCenters\n(\n5\n)\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nisomer\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega\"",
+    "answer": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nomega_opts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomega_opts\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\nimol\n=\noechem\n.\nOEMol\n(\nisomer\n)\nret_code\n=\nomega\n.\nBuild\n(\nimol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nimol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database\"",
+    "answer": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nomega_opts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nomega_opts\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nfor\nmol\nin\nifs\n.\nGetOEMols\n():\nfor\nisomer\nin\noeomega\n.\nOEFlipper\n(\nmol\n,\nopts\n):\nimol\n=\noechem\n.\nOEMol\n(\nisomer\n)\nret_code\n=\nomega\n.\nBuild\n(\nimol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nimol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega with max confs of 1\"",
+    "answer": "\"Generate 3D conformations with Omega with max confs of 1\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetMaxConfs\n(\n1\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations using with Omega for docking\"",
+    "answer": "\"Generate 3D conformations using with Omega for docking\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Pose\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations using Omega for ROCS\"",
+    "answer": "\"Generate 3D conformations using Omega for ROCS\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_ROCS\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Generate 3D conformations with Omega for FastROCS\"",
+    "answer": "'Generate 3D conformations with Omega for FastROCS\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_FastROCS\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega for freeform\"",
+    "answer": "\"Generate 3D conformations with Omega for freeform\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Dense\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with GPU Omega\"",
+    "answer": "\"Generate 3D conformations with GPU Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetUseGPU\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega using thompson sampling\"",
+    "answer": "\"Generate 3D conformations with Omega using thompson sampling\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetUseThompson\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformastions with Omega using alternative torsion library\"",
+    "answer": "\"Generate 3D conformastions with Omega using alternative torsion library\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetTorLib\n(\noeomega\n.\nOETorLibType_GubaV21\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with Omega using electrostatics\"",
+    "answer": "\"Generate 3D conformations with Omega using electrostatics\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetForceField\n(\n'mmff94s_Sheff'\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with a fixed substructure\n\"",
+    "answer": "\"Generate 3D conformations with a fixed substructure\n\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nss\n=\noechem\n.\nOESubSearch\n(\n'<SMILES string>'\n)\nss\n.\nSetMaxMatches\n(\n1\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixSubSearch\n(\nss\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations with a fixed substructure given a SMARTS patttern\"",
+    "answer": "\"Generate 3D conformations with a fixed substructure given a SMARTS patttern\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixSmarts\n(\n'<SMARTS String>'\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a molecule and hold a piece of the molecule fixed\"",
+    "answer": "\"Generate 3D conformations of a molecule and hold a piece of the molecule fixed\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfixed_fs\n=\noechem\n.\noemolistream\n(\nargv\n[\n3\n])\nfixed_mol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nfixed_fs\n,\nfixed_mol\n)\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixMol\n(\nfixed_mol\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations and apply MCS constraint on a portion of my molecule\"",
+    "answer": "\"Generate 3D conformations and apply MCS constraint on a portion of my molecule\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfixed_fs\n=\noechem\n.\noemolistream\n(\nargv\n[\n3\n])\nfixed_mol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nfixed_fs\n,\nfixed_mol\n)\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nconf_fix_options\n=\noeomega\n.\nOEConfFixOptions\n()\nconf_fix_options\n.\nSetFixMol\n(\nfixed_mol\n)\nconf_fix_options\n.\nSetFixMCS\n(\nTrue\n)\nmol_builder_opts\n=\noeomega\n.\nOEMolBuilderOptions\n()\nmol_builder\n=\noeomega\n.\nOEMolBuilder\n(\nmol_builder_opts\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_driver\n=\noeomega\n.\nOETorDriver\n(\ntor_drive_opts\n)\nbuild_code\n=\nmol_builder\n.\nBuild\n(\nmol\n,\nconf_fix_options\n)\nif\nbuild_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\ngen_code\n==\ntor_driver\n.\nGenerateConfs\n(\nmol\n,\nconf_fix_options\n)\nif\ngen_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\ngen_code\n))\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nbuild_code\n))",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a macrocycle molecule with Omega\"",
+    "answer": "\"Generate 3D conformations of a macrocycle molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformations of a macrocycle molecule in a specific solution\"",
+    "answer": "\"Generate 3D conformations of a macrocycle molecule in a specific solution\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\n# Set Dielectric Constant to change solution type. This is dielectric constant of water.\nmc_builder_opts\n=\noeomega\n.\nOEMacrocycleBuilderOptions\n()\nmc_builder_opts\n.\nSetDielectricConst\n(\n80.0\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nopts\n.\nSetMacrocycleBuilderOptions\n(\nmc_builder_opts\n)\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate 3D conformation of a macrocycle\"",
+    "answer": "\"Generate 3D conformation of a macrocycle\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEMacrocycleOmegaOptions\n()\nopts\n.\nSetMaxConfs\n(\n1\n)\nomega\n=\noeomega\n.\nOEMacrocycleOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Calculate the number of stereocenters of a molecule with Omega\"",
+    "answer": "\"Calculate the number of stereocenters of a molecule with Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nopts\n=\noeomega\n.\nOEFlipperOptions\n()\nnum_centers\n=\noeomega\n.\nOEFlipperStereoCenters\n(\nmol\n,\nopts\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Check if molecule is a macrocycle\"",
+    "answer": "\"Check if molecule is a macrocycle\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nif\noeomega\n.\nOEIsMacrocycle\n(\nmol\n):\nprint\n(\n'Yes, this molecule is a macrocycle'\n)\nelse\n:\nprint\n(\n'No this is not a macrocycle'\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Remove duplicate conformers from ensemble\"",
+    "answer": "\"Remove duplicate conformers from ensemble\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\nslice_ensemble_opts\n=\noeomega\n.\nOESliceEnsembleOptions\n()\nconf_slicer\n=\noeomega\n.\nOEConfSlicer\n(\nslice_ensemble_opts\n)\nif\nconf_slicer\n.\nSlice\n(\nmol\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Write out conformer energy'",
+    "answer": "'Write out conformer energy'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)\ntor_drive_opts\n=\noeomega\n.\nOETorDriveOptions\n()\ntor_drive_opts\n.\nSetSDEnergy\n(\nTrue\n)\nopts\n=\noeomega\n.\nOEOmegaOptions\n(\noeoemga\n.\nOEOmegaSampling_Classic\n)\nopts\n.\nSetTorDriveOptions\n(\ntor_drive_opts\n)\nomega\n=\noeomega\n.\nOEOmega\n(\nopts\n)\nret_code\n=\nomega\n.\nBuild\n(\nmol\n)\nif\nret_code\n==\noeomega\n.\nOEOmegaReturnCode_Success\n:\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nelse\n:\nprint\n(\noeomega\n.\nOEGetOmegaError\n(\nret_code\n))\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Generate Missing Fragments from input database with Omega\"",
+    "answer": "\"Generate Missing Fragments from input database with Omega\"",
+    "code": "In\u00a0[21]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nmake_lib\n=\noeomega\n.\nOEMakeFragLib\n()\nmake_lib\n.\nAddFragLib\n()\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nmake_lib\n.\nGenerateMissingFrags\n(\nifs\n,\nofs\n)",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "\"Retrieve Missing Fragments from fragment library in Omega\"",
+    "answer": "\"Retrieve Missing Fragments from fragment library in Omega\"",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\n,\noeomega\nfrom\nsys\nimport\nargv\nmake_lib\n=\noeomega\n.\nOEMakeFragLib\n()\nmake_lib\n.\nAddFragLib\n()\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nofs\n=\noechem\n.\noemolostream\n(\nargv\n[\n2\n])\nfor\nmol\nin\nmake_lib\n.\nGetMissingFrags\n(\nifs\n):\noechem\n.\nOEWriteMolecule\n(\nofs\n,\nmol\n)\nofs\n.\nclose\n()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "How do I enumerate stereoisomers using OEFlipper?",
+    "answer": "OEFlipper is a generator FUNCTION, not a class. Do NOT call .Build() on it. Iterate over it directly with a for loop. Each iteration yields a stereo-enumerated copy of the input molecule. Use OEFlipperOptions to configure maximum stereocenters.",
+    "code": "from openeye import oechem, oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEFlipperOptions()\nopts.SetMaxCenters(5)\n\nfor mol in ifs.GetOEMols():\n    for isomer in oeomega.OEFlipper(mol, opts):\n        oechem.OEWriteMolecule(ofs, isomer)\n\nofs.close()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [
+      "oechem.oemolistream",
+      "oechem.oemolostream",
+      "oeomega.OEFlipperOptions",
+      "oeomega.OEFlipper",
+      "oechem.OEWriteMolecule"
+    ],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "How do I handle Omega return codes and errors?",
+    "answer": "After calling omega.Build(mol), check the return code against OEOmegaReturnCode_Success. If it fails, call OEGetOmegaError(ret_code) to get a descriptive error message. Never skip the return code check.",
+    "code": "from openeye import oechem, oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(opts)\n\nmol = oechem.OEMol()\noechem.OEReadMolecule(ifs, mol)\n\nret_code = omega.Build(mol)\nif ret_code == oeomega.OEOmegaReturnCode_Success:\n    oechem.OEWriteMolecule(ofs, mol)\nelse:\n    print(oeomega.OEGetOmegaError(ret_code))\n\nofs.close()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [
+      "oechem.oemolistream",
+      "oechem.oemolostream",
+      "oeomega.OEOmegaOptions",
+      "oeomega.OEOmegaSampling_Classic",
+      "oeomega.OEOmega",
+      "oechem.OEMol"
+    ],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "How do I check return codes when looping over a molecule database?",
+    "answer": "Check the return code inside the loop for every molecule. Use OEOmegaReturnCode_Success to verify success and OEGetOmegaError to print errors per molecule.",
+    "code": "from openeye import oechem, oeomega\nfrom sys import argv\n\nifs = oechem.oemolistream(argv[1])\nofs = oechem.oemolostream(argv[2])\n\nopts = oeomega.OEOmegaOptions(oeomega.OEOmegaSampling_Classic)\nomega = oeomega.OEOmega(opts)\n\nfor mol in ifs.GetOEMols():\n    ret_code = omega.Build(mol)\n    if ret_code == oeomega.OEOmegaReturnCode_Success:\n        oechem.OEWriteMolecule(ofs, mol)\n    else:\n        print(\"%s: %s\" % (mol.GetTitle(), oeomega.OEGetOmegaError(ret_code)))\n\nofs.close()",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [
+      "oechem.oemolistream",
+      "oechem.oemolostream",
+      "oeomega.OEOmegaOptions",
+      "oeomega.OEOmegaSampling_Classic",
+      "oeomega.OEOmega",
+      "oeomega.OEOmegaReturnCode_Success"
+    ],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "What return codes does OEOmega return and what do they mean?",
+    "answer": "OEOmega.Build() returns an OEOmegaReturnCode constant. OEOmegaReturnCode_Success means conformers were generated. Any other code means failure \u2014 use OEGetOmegaError(ret_code) to get the human-readable error string.",
+    "code": "",
+    "source_url": "https://docs.eyesopen.com/toolkits/python/omegatk/",
+    "source_section": "Gold Standard Training Data",
+    "api_components": [],
+    "content_type": "example",
+    "is_gold_standard": true
+  },
+  {
+    "question": "'Read a molecule from a file into OEChem'",
+    "answer": "'Read a molecule from a file into OEChem'",
+    "code": "In\u00a0[\u00a0]:\nfrom\nopeneye\nimport\noechem\nfrom\nsys\nimport\nargv\nifs\n=\noechem\n.\noemolistream\n(\nargv\n[\n1\n])\nmol\n=\noechem\n.\nOEMol\n()\noechem\n.\nOEReadMolecule\n(\nifs\n,\nmol\n)",
     "source_url": "data/raw/Omega_ChatBot_Prompts.html",
     "source_section": "Omega ChatBot Prompts Notebook",
     "api_components": [],
