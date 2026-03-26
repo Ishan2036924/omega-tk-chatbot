@@ -4,13 +4,41 @@ import { addKnowledge, addKnowledgeFile, listKnowledge, deleteKnowledge } from '
 
 const ACCEPTED = '.pdf,.md,.txt,.png,.jpg,.jpeg'
 
+/**
+ * Confidence dot — colour-codes the judge score for each knowledge source.
+ *   Green  ≥ 0.8   — high relevance
+ *   Yellow 0.5–0.8 — moderate relevance
+ *   Gray   null    — legacy chunk (pre-Feature-2, no score recorded)
+ */
+function ConfidenceDot({ score }) {
+  if (score == null) return null
+  const pct = Math.round(score * 100)
+  let color, label
+  if (score >= 0.8) {
+    color = 'bg-emerald-400'
+    label = `High relevance · ${pct}%`
+  } else {
+    color = 'bg-amber-400'
+    label = `Moderate relevance · ${pct}%`
+  }
+  return (
+    <span
+      title={label}
+      className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${color}`}
+    />
+  )
+}
+
 function SourceItem({ item, onDelete, isDeleting }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-50 group hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-2 min-w-0">
         <FileText size={13} className="text-purple-400 flex-shrink-0" />
         <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-700 truncate">{item.source}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-medium text-gray-700 truncate">{item.source}</p>
+            <ConfidenceDot score={item.avg_judge_score} />
+          </div>
           <p className="text-[10px] text-gray-400 mt-0.5">
             {item.chunk_count} chunk{item.chunk_count !== 1 ? 's' : ''}
             {item.created_at ? ` · ${new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
@@ -59,10 +87,16 @@ export default function KnowledgePanel({ sessionId, token = null }) {
     setIsAdding(true)
     try {
       const res = await addKnowledge(pasteText, name, sessionId, token)
-      showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${name}"`)
-      setPasteText('')
-      setSourceName('')
-      await loadSources()
+      if (res.accepted === false) {
+        // LLM judge rejected the content
+        showToast('error', `Rejected — not Omega TK related: ${res.reason}`)
+      } else {
+        const pct = res.confidence != null ? ` (confidence: ${Math.round(res.confidence * 100)}%)` : ''
+        showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${name}" ✓${pct}`)
+        setPasteText('')
+        setSourceName('')
+        await loadSources()
+      }
     } catch (err) {
       showToast('error', err.message)
     } finally {
@@ -77,8 +111,14 @@ export default function KnowledgePanel({ sessionId, token = null }) {
     setIsAdding(true)
     try {
       const res = await addKnowledgeFile(file, sessionId, token)
-      showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${res.source}"`)
-      await loadSources()
+      if (res.accepted === false) {
+        // LLM judge rejected the file content
+        showToast('error', `Rejected — not Omega TK related: ${res.reason}`)
+      } else {
+        const pct = res.confidence != null ? ` (confidence: ${Math.round(res.confidence * 100)}%)` : ''
+        showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${res.source}" ✓${pct}`)
+        await loadSources()
+      }
     } catch (err) {
       showToast('error', err.message)
     } finally {

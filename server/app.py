@@ -245,6 +245,64 @@ def _cosine_sim(a: list[float], b: list[float]) -> float:
     return float(np.dot(a_arr, b_arr) / norm) if norm > 0 else 0.0
 
 
+_JUDGE_SYSTEM = """\
+You are a strict domain validator for an OpenEye cheminformatics chatbot.
+Evaluate if the provided content is strictly related to:
+- OpenEye Omega Toolkit (oeomega)
+- ROCS / Shape Toolkit (oeshape)
+- OpenEye cheminformatics APIs (oechem)
+- Molecular conformer generation
+- Drug discovery cheminformatics workflows
+
+Respond ONLY with valid JSON:
+{"relevant": true/false, "confidence": 0.0-1.0, "reason": "one sentence explanation"}
+
+Be strict — reject general chemistry, biology, ML papers unless directly about OpenEye APIs."""
+
+_JUDGE_DEFAULT = {
+    "relevant": False,
+    "confidence": 0.0,
+    "reason": "Could not validate content",
+}
+
+
+def _llm_judge_knowledge(text: str) -> dict:
+    """
+    Ask GPT-4o-mini whether the text is strictly related to OpenEye / Omega TK.
+
+    Returns {"relevant": bool, "confidence": float, "reason": str}.
+    Defaults to {"relevant": False, ...} on any failure so that content is
+    never stored silently when the judge cannot run.
+    """
+    if _generator is None:
+        return _JUDGE_DEFAULT
+    try:
+        completion = _generator.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": _JUDGE_SYSTEM},
+                {"role": "user", "content": f"Content to evaluate:\n\n{text[:3000]}"},
+            ],
+            temperature=0.0,
+            max_tokens=120,
+        )
+        raw = completion.choices[0].message.content.strip()
+        # Strip markdown code fences if model wraps JSON in them
+        raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.DOTALL).strip()
+        result = json.loads(raw)
+        return {
+            "relevant":   bool(result.get("relevant", False)),
+            "confidence": float(result.get("confidence", 0.0)),
+            "reason":     str(result.get("reason", "")),
+        }
+    except json.JSONDecodeError:
+        logger.warning("LLM judge returned non-JSON: %r", locals().get("raw", ""))
+        return _JUDGE_DEFAULT
+    except Exception as exc:
+        logger.warning("LLM knowledge judge failed: %s", exc)
+        return _JUDGE_DEFAULT
+
+
 def _retrieve_knowledge(
     query: str,
     session_id: str,
@@ -254,14 +312,18 @@ def _retrieve_knowledge(
 ) -> list[dict]:
     """
     Retrieve relevant user-uploaded knowledge chunks via in-Python cosine similarity.
-    Prefers querying by user_id (cross-session, permanent) when available;
-    falls back to session_id for unauthenticated callers.
+
+    Changes (Feature 2):
+    - Queries by user_id (cross-session, permanent) when available; else session_id.
+    - Skips chunks whose judge_score < 0.5 (low-quality gate).
+    - Ranks by combined score: cosine_sim × 0.7 + judge_score × 0.3.
+    - Legacy chunks without a judge_score are treated as 0.5 (neutral).
     """
     sb = _get_supabase()
     if sb is None or _generator is None:
         return []
     try:
-        base = sb.table("knowledge_chunks").select("id, source, text, embedding")
+        base = sb.table("knowledge_chunks").select("id, source, text, embedding, judge_score")
         if user_id:
             rows = base.eq("user_id", user_id).execute().data
         else:
@@ -272,10 +334,24 @@ def _retrieve_knowledge(
         scored = []
         for r in rows:
             emb = r.get("embedding")
-            if isinstance(emb, list) and emb:
-                sim = _cosine_sim(query_emb, emb)
-                if sim >= threshold:
-                    scored.append({"text": r["text"], "source": r["source"], "score": sim})
+            if not isinstance(emb, list) or not emb:
+                continue
+            cosine = _cosine_sim(query_emb, emb)
+            if cosine < threshold:
+                continue
+            # Legacy chunks (pre-Feature-2) have no judge_score — treat as neutral 0.5
+            judge_s = float(r["judge_score"]) if r.get("judge_score") is not None else 0.5
+            # Skip chunks that the judge rated as low-quality
+            if judge_s < 0.5:
+                continue
+            combined = cosine * 0.7 + judge_s * 0.3
+            scored.append({
+                "text":        r["text"],
+                "source":      r["source"],
+                "score":       combined,
+                "cosine_score": cosine,
+                "judge_score": judge_s,
+            })
         scored.sort(key=lambda x: x["score"], reverse=True)
         return scored[:top_k]
     except Exception as exc:
@@ -1095,24 +1171,49 @@ async def add_knowledge_endpoint(
     session_id: str = Form(...),
     user_id: Optional[str] = Depends(get_current_user),
 ):
-    """Chunk, embed, and store pasted text into Supabase knowledge_chunks."""
+    """
+    Chunk, embed, and store pasted text — after LLM domain validation (Feature 2).
+
+    Returns:
+      {"accepted": false, "confidence": float, "reason": str, "chunks_added": 0}
+        when the judge deems content off-topic.
+      {"accepted": true,  "confidence": float, "reason": str, "chunks_added": N, "source": str}
+        on success.
+    """
     sb = _get_supabase()
     if sb is None:
         raise HTTPException(status_code=503, detail="Supabase not configured")
     if _generator is None:
         raise HTTPException(status_code=503, detail="Pipeline not ready")
-    chunks = _chunk_text(text.strip(), chunk_size=400, overlap=50)
-    if not chunks:
+
+    clean = text.strip()
+    if not clean:
         raise HTTPException(status_code=400, detail="No text content to add")
+
+    # ── LLM Judge ─────────────────────────────────────────────────────────────
+    judge = _llm_judge_knowledge(clean)
+    if not judge["relevant"]:
+        logger.info("Knowledge judge REJECTED source '%s': %s", source, judge["reason"])
+        return {
+            "accepted":    False,
+            "confidence":  judge["confidence"],
+            "reason":      judge["reason"],
+            "chunks_added": 0,
+        }
+
+    # ── Chunk → embed → store ─────────────────────────────────────────────────
+    chunks = _chunk_text(clean, chunk_size=400, overlap=50)
     inserted = 0
     for chunk in chunks:
         try:
             emb = _embed_text(chunk)
             record: dict = {
-                "session_id": session_id,
-                "source": source,
-                "text": chunk,
-                "embedding": emb,
+                "session_id":  session_id,
+                "source":      source,
+                "text":        chunk,
+                "embedding":   emb,
+                "judge_score": judge["confidence"],
+                "judge_reason": judge["reason"],
             }
             if user_id:
                 record["user_id"] = user_id
@@ -1120,8 +1221,16 @@ async def add_knowledge_endpoint(
             inserted += 1
         except Exception as exc:
             logger.warning("Knowledge chunk insert failed: %s", exc)
-    logger.info("Knowledge: inserted %d chunks from source '%s'", inserted, source)
-    return {"chunks_added": inserted, "source": source}
+
+    logger.info("Knowledge: ACCEPTED %d chunks from source '%s' (confidence %.2f)",
+                inserted, source, judge["confidence"])
+    return {
+        "accepted":    True,
+        "confidence":  judge["confidence"],
+        "reason":      judge["reason"],
+        "chunks_added": inserted,
+        "source":      source,
+    }
 
 
 @app.post("/api/knowledge-file")
@@ -1130,18 +1239,27 @@ async def add_knowledge_file_endpoint(
     file: UploadFile = File(...),
     user_id: Optional[str] = Depends(get_current_user),
 ):
-    """Upload a file, extract text, chunk and embed into knowledge_chunks."""
+    """
+    Upload a file, extract text, then run the LLM judge before
+    chunking / embedding / storing (Feature 2).
+
+    Returns same accepted/rejected shape as POST /api/knowledge.
+    """
     sb = _get_supabase()
     if sb is None:
         raise HTTPException(status_code=503, detail="Supabase not configured")
     if _generator is None:
         raise HTTPException(status_code=503, detail="Pipeline not ready")
+
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large — max 5 MB")
-    fname = (file.filename or "").lower()
-    ctype = file.content_type or "application/octet-stream"
+
+    fname  = (file.filename or "").lower()
+    ctype  = file.content_type or "application/octet-stream"
     source = file.filename or "uploaded_file"
+
+    # ── Extract text by file type ──────────────────────────────────────────────
     if fname.endswith(".pdf"):
         text = _extract_pdf_text(content)
     elif fname.endswith((".md", ".txt")):
@@ -1149,19 +1267,38 @@ async def add_knowledge_file_endpoint(
     elif fname.endswith((".png", ".jpg", ".jpeg")) or ctype.startswith("image/"):
         text = await asyncio.to_thread(_extract_image_text_sync, content, ctype)
     else:
-        raise HTTPException(status_code=400, detail="Unsupported file type — use PDF, TXT, MD, or image")
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type — use PDF, TXT, MD, or image",
+        )
     if not text.strip():
         raise HTTPException(status_code=400, detail="Could not extract text from file")
+
+    # ── LLM Judge ─────────────────────────────────────────────────────────────
+    judge = _llm_judge_knowledge(text)
+    if not judge["relevant"]:
+        logger.info("Knowledge judge REJECTED file '%s': %s", source, judge["reason"])
+        return {
+            "accepted":    False,
+            "confidence":  judge["confidence"],
+            "reason":      judge["reason"],
+            "chunks_added": 0,
+            "source":      source,
+        }
+
+    # ── Chunk → embed → store ─────────────────────────────────────────────────
     chunks = _chunk_text(text, chunk_size=400, overlap=50)
     inserted = 0
     for chunk in chunks:
         try:
             emb = _embed_text(chunk)
             record: dict = {
-                "session_id": session_id,
-                "source": source,
-                "text": chunk,
-                "embedding": emb,
+                "session_id":  session_id,
+                "source":      source,
+                "text":        chunk,
+                "embedding":   emb,
+                "judge_score": judge["confidence"],
+                "judge_reason": judge["reason"],
             }
             if user_id:
                 record["user_id"] = user_id
@@ -1169,8 +1306,16 @@ async def add_knowledge_file_endpoint(
             inserted += 1
         except Exception as exc:
             logger.warning("Knowledge file chunk insert failed: %s", exc)
-    logger.info("Knowledge file: inserted %d chunks from '%s'", inserted, source)
-    return {"chunks_added": inserted, "source": source}
+
+    logger.info("Knowledge file: ACCEPTED %d chunks from '%s' (confidence %.2f)",
+                inserted, source, judge["confidence"])
+    return {
+        "accepted":    True,
+        "confidence":  judge["confidence"],
+        "reason":      judge["reason"],
+        "chunks_added": inserted,
+        "source":      source,
+    }
 
 
 @app.get("/api/knowledge/{session_id}")
@@ -1178,14 +1323,17 @@ def list_knowledge_endpoint(
     session_id: str,
     user_id: Optional[str] = Depends(get_current_user),
 ):
-    """List unique knowledge sources. When authenticated, returns all sources
-    for the user across every session (permanent knowledge base).
-    Falls back to session-scoped listing for unauthenticated requests."""
+    """
+    List unique knowledge sources.
+    When authenticated, returns all sources for the user across every session.
+    Falls back to session-scoped listing for unauthenticated requests.
+    Now also returns avg_judge_score per source for the confidence badge (Feature 2).
+    """
     sb = _get_supabase()
     if sb is None:
         return []
     try:
-        base = sb.table("knowledge_chunks").select("id, source, created_at")
+        base = sb.table("knowledge_chunks").select("id, source, created_at, judge_score")
         if user_id:
             rows = base.eq("user_id", user_id).order("created_at", desc=False).execute().data
         else:
@@ -1195,13 +1343,26 @@ def list_knowledge_endpoint(
             src = r["source"]
             if src not in sources:
                 sources[src] = {
-                    "id": r["id"],
-                    "source": src,
+                    "id":          r["id"],
+                    "source":      src,
                     "chunk_count": 0,
-                    "created_at": r["created_at"],
+                    "created_at":  r["created_at"],
+                    "_score_sum":  0.0,
+                    "_score_n":    0,
                 }
             sources[src]["chunk_count"] += 1
-        return list(sources.values())
+            js = r.get("judge_score")
+            if js is not None:
+                sources[src]["_score_sum"] += float(js)
+                sources[src]["_score_n"]   += 1
+
+        result = []
+        for s in sources.values():
+            n = s.pop("_score_n")
+            total = s.pop("_score_sum")
+            s["avg_judge_score"] = round(total / n, 3) if n > 0 else None
+            result.append(s)
+        return result
     except Exception as exc:
         logger.warning("List knowledge failed: %s", exc)
         return []
