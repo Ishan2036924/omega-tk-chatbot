@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import {
   BookOpen, Upload, Plus, Trash2, FileText,
-  AlertCircle, CheckCircle, X, Loader2,
+  AlertCircle, CheckCircle, X, Loader2, RefreshCw,
 } from 'lucide-react'
 import { addKnowledge, addKnowledgeFile, deleteKnowledge } from '../api.js'
 
@@ -395,15 +395,27 @@ export default function KnowledgePanel({
 
         {/* ── Uploaded sources list ──────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between gap-2">
             <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
               Uploaded Sources
             </h3>
-            {!isLoadingSources && sources.length > 0 && (
-              <span className="text-[10px] text-gray-300">
-                {sources.length} source{sources.length !== 1 ? 's' : ''}
-              </span>
-            )}
+            <div className="flex items-center gap-2 ml-auto">
+              {!isLoadingSources && sources.length > 0 && (
+                <span className="text-[10px] text-gray-300">
+                  {sources.length} source{sources.length !== 1 ? 's' : ''}
+                </span>
+              )}
+              {/* Manual refresh — forces a re-fetch from the server */}
+              <button
+                onClick={() => onRefreshSources?.()}
+                disabled={isLoadingSources}
+                title="Refresh sources"
+                className="p-1 rounded-md text-gray-300 hover:text-purple-400 hover:bg-purple-50 transition-colors disabled:opacity-40"
+                aria-label="Refresh knowledge sources"
+              >
+                <RefreshCw size={11} className={isLoadingSources ? 'animate-spin' : ''} />
+              </button>
+            </div>
           </div>
 
           {isLoadingSources ? (

@@ -163,17 +163,25 @@ export async function loadUserSessions(token) {
 // ── Knowledge base ────────────────────────────────────────────────────────────
 
 /**
- * Load ALL knowledge sources for the authenticated user across every session.
- * Uses the dedicated /api/knowledge/me endpoint — no session_id needed.
- * Called during app initialisation so sources are available immediately.
+ * Load ALL knowledge sources visible to the caller.
  *
- * @param {string} token — Supabase JWT access token (required)
+ * When SUPABASE_JWT_SECRET is configured on the backend the response is
+ * user-scoped (cross-session, permanent). When it is NOT configured the
+ * backend degrades to session-scoped results using the provided sessionId
+ * fallback — so sources still appear in both authenticated and degraded modes.
+ *
+ * @param {string}      token     — Supabase JWT access token
+ * @param {string|null} sessionId — current session ID (fallback for no-JWT mode)
  * @returns {Promise<Array>}
  */
-export async function loadMyKnowledge(token) {
+export async function loadMyKnowledge(token, sessionId = null) {
   if (!token) return []
   try {
-    const res = await fetch(`${BASE_URL}/api/knowledge/me`, {
+    const url = new URL(`${BASE_URL}/api/knowledge/me`)
+    // Always pass session_id so the backend can fall back to session scope
+    // when SUPABASE_JWT_SECRET is not configured (degraded mode).
+    if (sessionId) url.searchParams.set('session_id', sessionId)
+    const res = await fetch(url.toString(), {
       headers: withAuth({}, token),
     })
     if (!res.ok) return []

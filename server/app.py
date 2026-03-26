@@ -36,7 +36,7 @@ sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env")
 
-from fastapi import FastAPI, HTTPException, Form, File, UploadFile, Header, Depends
+from fastapi import FastAPI, HTTPException, Form, File, UploadFile, Header, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -1351,54 +1351,161 @@ async def add_knowledge_file_endpoint(
 @app.get("/api/knowledge/me")
 def list_my_knowledge_endpoint(
     user_id: Optional[str] = Depends(get_current_user),
+    session_id: Optional[str] = Query(
+        None,
+        description=(
+            "Fallback session scope used when SUPABASE_JWT_SECRET is not configured "
+            "and JWT verification is unavailable. The frontend always passes the active "
+            "session_id so sources appear even in degraded (no-JWT) mode."
+        ),
+    ),
 ):
     """
-    Return all knowledge sources for the authenticated user across all sessions.
-    Requires a valid JWT — returns 401 when unauthenticated.
-    This endpoint must be registered BEFORE /api/knowledge/{session_id} so FastAPI
-    does not match the literal string "me" as a session_id path parameter.
+    Return all knowledge sources visible to the caller.
+
+    Resolution order:
+    1.  user_id available (JWT verified) → query knowledge_chunks WHERE user_id = ?
+        ALSO find legacy chunks that were stored before SUPABASE_JWT_SECRET was set
+        (those rows have user_id IS NULL but session_id points to a session owned by
+        this user). Backfill user_id on any such rows so they are found correctly from
+        now on.
+    2.  user_id NOT available but session_id provided → fallback to session-scoped query.
+        This keeps the panel working even when SUPABASE_JWT_SECRET is missing.
+    3.  Neither available → 401.
+
+    NOTE: This endpoint MUST remain registered before /api/knowledge/{session_id} so
+    FastAPI cannot match the literal string "me" as a session_id path parameter.
     """
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Authentication required")
     sb = _get_supabase()
     if sb is None:
         return []
-    try:
-        rows = (
-            sb.table("knowledge_chunks")
-            .select("id, source, created_at, judge_score")
-            .eq("user_id", user_id)
-            .order("created_at", desc=False)
-            .execute()
-            .data
+
+    all_rows: list[dict] = []
+    seen_ids: set[str] = set()
+
+    def _collect(rows: list[dict]) -> None:
+        """Dedup by row id and accumulate into all_rows."""
+        for r in rows or []:
+            if r.get("id") not in seen_ids:
+                seen_ids.add(r["id"])
+                all_rows.append(r)
+
+    if user_id:
+        # ── Path 1: JWT verified — query by user_id ─────────────────────────
+        try:
+            _collect(
+                sb.table("knowledge_chunks")
+                .select("id, source, created_at, judge_score")
+                .eq("user_id", user_id)
+                .order("created_at", desc=False)
+                .execute()
+                .data
+            )
+        except Exception as exc:
+            logger.warning("Knowledge user_id query failed: %s", exc)
+
+        # ── Backfill: find legacy NULL-user_id chunks via session ownership ──
+        # These exist when uploads happened while SUPABASE_JWT_SECRET was unset
+        # (get_current_user() returned None, so user_id was never written to the row).
+        try:
+            sess_rows = (
+                sb.table("chat_sessions")
+                .select("id")
+                .eq("user_id", user_id)
+                .execute()
+                .data
+            ) or []
+            sess_ids = [r["id"] for r in sess_rows]
+            if sess_ids:
+                # Fetch session-scoped rows whose user_id is NULL
+                candidate_rows = (
+                    sb.table("knowledge_chunks")
+                    .select("id, source, created_at, judge_score, user_id")
+                    .in_("session_id", sess_ids)
+                    .order("created_at", desc=False)
+                    .execute()
+                    .data
+                ) or []
+                legacy_rows = [r for r in candidate_rows if not r.get("user_id")]
+                if legacy_rows:
+                    legacy_ids = [r["id"] for r in legacy_rows]
+                    # Backfill user_id so future queries find these via user_id
+                    try:
+                        sb.table("knowledge_chunks") \
+                          .update({"user_id": user_id}) \
+                          .in_("id", legacy_ids) \
+                          .execute()
+                        logger.info(
+                            "Backfilled user_id=%s on %d legacy knowledge chunk(s)",
+                            user_id, len(legacy_ids),
+                        )
+                    except Exception as patch_exc:
+                        logger.warning("Could not backfill user_id on legacy chunks: %s", patch_exc)
+                    _collect(legacy_rows)
+        except Exception as exc:
+            logger.warning("Legacy knowledge chunk backfill failed: %s", exc)
+
+    elif session_id:
+        # ── Path 2: JWT not available — degrade to session scope ─────────────
+        logger.warning(
+            "SUPABASE_JWT_SECRET not configured — knowledge query falling back to "
+            "session_id='%s' scope. Set SUPABASE_JWT_SECRET for persistent cross-session KB.",
+            session_id,
         )
-        sources: dict[str, dict] = {}
-        for r in rows:
-            src = r["source"]
-            if src not in sources:
-                sources[src] = {
-                    "id":          r["id"],
-                    "source":      src,
-                    "chunk_count": 0,
-                    "created_at":  r["created_at"],
-                    "_score_sum":  0.0,
-                    "_score_n":    0,
-                }
-            sources[src]["chunk_count"] += 1
-            js = r.get("judge_score")
-            if js is not None:
-                sources[src]["_score_sum"] += float(js)
-                sources[src]["_score_n"]   += 1
-        result = []
-        for s in sources.values():
-            n = s.pop("_score_n")
-            total = s.pop("_score_sum")
-            s["avg_judge_score"] = round(total / n, 3) if n > 0 else None
-            result.append(s)
-        return result
-    except Exception as exc:
-        logger.warning("list_my_knowledge failed: %s", exc)
-        return []
+        try:
+            _collect(
+                sb.table("knowledge_chunks")
+                .select("id, source, created_at, judge_score")
+                .eq("session_id", session_id)
+                .order("created_at", desc=False)
+                .execute()
+                .data
+            )
+        except Exception as exc:
+            logger.warning("Knowledge session_id fallback query failed: %s", exc)
+
+    else:
+        # ── Path 3: no auth, no session_id — cannot scope the query ──────────
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "Cannot load knowledge sources: JWT verification unavailable "
+                "(SUPABASE_JWT_SECRET not set) and no session_id provided. "
+                "Add SUPABASE_JWT_SECRET to your environment."
+            ),
+        )
+
+    # ── Aggregate rows by source name ────────────────────────────────────────
+    sources: dict[str, dict] = {}
+    for r in all_rows:
+        src = r["source"]
+        if src not in sources:
+            sources[src] = {
+                "id":          r["id"],
+                "source":      src,
+                "chunk_count": 0,
+                "created_at":  r["created_at"],
+                "_score_sum":  0.0,
+                "_score_n":    0,
+            }
+        sources[src]["chunk_count"] += 1
+        js = r.get("judge_score")
+        if js is not None:
+            sources[src]["_score_sum"] += float(js)
+            sources[src]["_score_n"]   += 1
+
+    result = []
+    for s in sources.values():
+        n     = s.pop("_score_n")
+        total = s.pop("_score_sum")
+        s["avg_judge_score"] = round(total / n, 3) if n > 0 else None
+        result.append(s)
+
+    logger.info(
+        "list_my_knowledge → %d source(s) [user_id=%s, session_id=%s]",
+        len(result), user_id, session_id,
+    )
+    return result
 
 
 @app.get("/api/knowledge/{session_id}")

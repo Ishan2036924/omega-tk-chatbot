@@ -133,15 +133,17 @@ export default function App() {
   }, [])
 
   // ── Knowledge sources — fetch/refresh for the authenticated user ─────────────
-  // Accepts the token as a parameter so it can be called from restoreForToken
-  // (where accessToken state may not yet be committed) and from event handlers
-  // (where accessToken IS in state — pass it directly).
-  const refreshKnowledge = useCallback(async (token) => {
+  // Accepts token + sessionId as parameters so it works in two modes:
+  //   Authenticated mode: SUPABASE_JWT_SECRET set → user-scoped, cross-session
+  //   Degraded mode:      SUPABASE_JWT_SECRET missing → session-scoped fallback
+  // sessionId is ALWAYS forwarded to the backend as a fallback anchor so the
+  // panel works even when JWT verification is not configured on the server.
+  const refreshKnowledge = useCallback(async (token, sessionId = null) => {
     if (!token) return
-    console.log('[KB] Loading knowledge sources for user…')
+    console.log('[KB] Loading knowledge sources — sessionId fallback:', sessionId)
     setIsLoadingKnowledge(true)
     try {
-      const sources = await loadMyKnowledge(token)
+      const sources = await loadMyKnowledge(token, sessionId)
       console.log('[KB]', sources?.length ?? 0, 'source(s) loaded')
       setKnowledgeSources(sources || [])
     } catch {
@@ -191,11 +193,13 @@ export default function App() {
     setCurrentSessionId(targetId)
     localStorage.setItem(LS_KEY, targetId)
 
-    // Load history + knowledge sources in parallel — neither blocks the other
+    // Load history + knowledge sources in parallel — neither blocks the other.
+    // Pass targetId as the session_id fallback so sources appear even when
+    // SUPABASE_JWT_SECRET is not configured on the server.
     console.log('[Restore] Loading history + knowledge sources in parallel…')
     const [msgRows] = await Promise.all([
       loadHistory(targetId, token).catch(() => []),
-      refreshKnowledge(token),        // sets knowledgeSources state directly
+      refreshKnowledge(token, targetId),   // sessionId fallback for degraded mode
     ])
     console.log('[Restore] History rows received:', msgRows?.length ?? 0)
     if (msgRows && msgRows.length > 0) {
@@ -554,7 +558,7 @@ export default function App() {
           accessToken={accessToken}
           knowledgeSources={knowledgeSources}
           isLoadingKnowledge={isLoadingKnowledge}
-          onRefreshKnowledge={() => refreshKnowledge(accessToken)}
+          onRefreshKnowledge={() => refreshKnowledge(accessToken, currentSessionId)}
         />
       </div>
 
