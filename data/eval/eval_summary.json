@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-03-26T18:39:11.715803Z",
+  "n_evaluated": 70,
+  "overall_score": 0.8451,
+  "ragas": {
+    "faithfulness": 0.648766212492403,
+    "answer_relevancy": 0.5452684607749413,
+    "context_precision": 0.9562499999767249,
+    "context_recall": 0.9247103961201706,
+    "average": 0.7687
+  },
+  "rag_triad": {
+    "context_relevance": 0.9943,
+    "groundedness": 0.9971,
+    "answer_relevance": 0.7729,
+    "average": 0.9214
+  },
+  "bottom_5_questions": [
+    {
+      "rank": 1,
+      "question": "Write a molecule from OEChem",
+      "score": 0.4321
+    },
+    {
+      "rank": 2,
+      "question": "'Write a molecule from OEChem'",
+      "score": 0.4558
+    },
+    {
+      "rank": 3,
+      "question": "\"Generate 3D conformations with Omega using electrostatics\"",
+      "score": 0.4852
+    },
+    {
+      "rank": 4,
+      "question": "Write out conformer energy",
+      "score": 0.4874
+    },
+    {
+      "rank": 5,
+      "question": "\"Generate Missing Fragments from input database with Omega\"",
+      "score": 0.4891
+    }
+  ]
+}

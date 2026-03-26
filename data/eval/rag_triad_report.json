@@ -1,0 +1,852 @@
+{
+  "generated_at": "2026-03-26T18:39:11.700224Z",
+  "n_questions": 70,
+  "averages": {
+    "context_relevance": 0.9943,
+    "groundedness": 0.9971,
+    "answer_relevance": 0.7729,
+    "triad_average": 0.9214
+  },
+  "per_question": [
+    {
+      "question": "Read a molecule from a file into OEChem",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct and complete code examples for reading a molecule from a file into OEChem.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the relevant classes in OEChem.",
+        "answer_relevance": "The answer provides a general overview of reading a molecule using OEChem but lacks specific code examples or detailed steps to directly address the question."
+      }
+    },
+    {
+      "question": "Write a molecule from OEChem",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.2,
+      "triad_avg": 0.7333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples for writing a molecule using OEChem, which directly answers the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the functionality and classes used in the code.",
+        "answer_relevance": "The answer discusses the functionality of OEChem but does not provide a specific molecule as requested."
+      }
+    },
+    {
+      "question": "Generate conformations for my molecule with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide detailed code examples for generating conformations using the OpenEye Omega TK Python API, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating molecular conformations.",
+        "answer_relevance": "The answer provides relevant information about using the OpenEye Omega Toolkit but lacks specific code examples or detailed steps for generating conformations."
+      }
+    },
+    {
+      "question": "Generate conformations for my database of molecules",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for generating conformations of molecules using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating molecular conformations.",
+        "answer_relevance": "The answer provides a good overview of the process and tools used for generating conformations but lacks specific details or code examples that would directly assist in implementing the solution."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereochemistry in my molecule with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples for enumerating unspecified stereochemistry using the OpenEye Omega TK Python API, which is exactly what the question asks for.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, as it accurately describes the code's purpose and the classes used in the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a good overview of the process and tools used for enumerating stereochemistry but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereochemistry for my database of molecules with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for enumerating unspecified stereochemistry using the OpenEye Omega TK Python API, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for enumerating unspecified stereochemistry.",
+        "answer_relevance": "The answer provides relevant information about the Omega Toolkit and its classes but lacks specific details on how to enumerate unspecified stereochemistry."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for enumerating unspecified stereochemistry for molecules with up to 3 stereocenters using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the enumeration of unspecified stereochemistry using the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides relevant information about the enumeration of stereochemistry but lacks specific examples or a detailed explanation of the enumeration process."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for enumerating unspecified stereochemistry for molecules with varying maximum unspecified stereocenters, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and functionality.",
+        "answer_relevance": "The answer provides relevant information about enumerating stereochemistry but lacks specific examples or a clear enumeration of the unspecified stereochemistry for molecules with up to five stereocenters."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereocenters and generate 3D conformers with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for enumerating unspecified stereocenters and generating 3D conformers using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of OpenEye Omega Toolkit for enumerating stereocenters and generating 3D conformers.",
+        "answer_relevance": "The answer provides a good overview of the process and tools used for enumerating stereocenters and generating 3D conformers, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for enumerating unspecified stereocenters and generating 3D conformers using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, detailing the use of OpenEye Omega Toolkit for enumerating stereocenters and generating 3D conformers.",
+        "answer_relevance": "The answer provides relevant information about enumerating stereocenters and generating 3D conformers, but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega with max confs of 1",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete and relevant code example for generating 3D conformations with Omega with a maximum of 1 conformation.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the use of OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a good overview of the Omega toolkit and its usage for generating 3D conformations, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations using Omega for docking",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for generating 3D conformations using Omega, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating 3D conformations for docking.",
+        "answer_relevance": "The answer provides a good overview of using the Omega toolkit for generating 3D conformations but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations using Omega for ROCS",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for generating 3D conformations using Omega for ROCS, which directly answers the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of Omega for generating 3D conformations for ROCS.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations using Omega for ROCS, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega for FastROCS",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for generating 3D conformations with Omega for FastROCS, which directly answers the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and the classes used in the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a good overview of the process and tools involved in generating 3D conformations with Omega for FastROCS, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega for freeform",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples for generating 3D conformations with Omega, specifically for freeform, which directly answers the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the purpose and functionality of the code for generating 3D conformations with Omega.",
+        "answer_relevance": "The answer provides a good overview of the process and tools involved in generating 3D conformations but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with GPU Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide detailed code examples for generating 3D conformations using GPU Omega, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating 3D conformations with GPU acceleration.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations using GPU Omega but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega using thompson sampling",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete code example for generating 3D conformations with Omega using Thompson sampling.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically the use of the OpenEye Omega Toolkit and the implementation of Thompson sampling.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations using Omega and mentions Thompson sampling, but lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega using alternative torsion library",
+      "context_relevance": 0.8,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.8667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code snippets for generating 3D conformations with Omega, specifically using an alternative torsion library, but some chunks are incomplete.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit and the specific options for generating 3D conformations.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and relevant classes but lacks specific code examples or a complete implementation."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with Omega using electrostatics",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete code example for generating 3D conformations with Omega using electrostatics, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating 3D conformations with electrostatics.",
+        "answer_relevance": "The answer provides relevant information about using the OpenEye Omega Toolkit for generating 3D conformations with electrostatics, but lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with a fixed substructure",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations with a fixed substructure using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the purpose and functionality of the code.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes for generating 3D conformations with a fixed substructure, but it lacks specific implementation details or example code."
+      }
+    },
+    {
+      "question": "Generate 3D conformations with a fixed substructure given a SMARTS pattern",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code snippets and explanations for generating 3D conformations with a fixed substructure using a SMARTS pattern.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, which details the use of the OpenEye Omega TK Python API for generating 3D conformations while fixing a substructure.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes for generating 3D conformations with a fixed substructure, but it lacks specific implementation details or examples."
+      }
+    },
+    {
+      "question": "Generate 3D conformations of a molecule and hold a piece of the molecule fixed",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations of a molecule while holding a piece of the molecule fixed using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the use of OpenEye Omega Toolkit for generating 3D conformations while fixing parts of the molecule.",
+        "answer_relevance": "The answer provides a relevant explanation of the process and tools used for generating 3D conformations while fixing part of a molecule, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations and apply MCS constraint on a portion of my molecule",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations and applying MCS constraints using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the use of OpenEye Omega TK Python API for generating 3D conformations with MCS constraints.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes but lacks specific code examples or detailed steps for implementation."
+      }
+    },
+    {
+      "question": "Generate 3D conformations of a macrocycle molecule with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide detailed code examples for generating 3D conformations of macrocycle molecules using the OpenEye Omega TK Python API, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating 3D conformations of macrocyclic molecules.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations using Omega but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Generate 3D conformations of a macrocycle molecule in a specific solution",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code and instructions for generating 3D conformations of a macrocycle molecule using the OpenEye Omega TK Python API, specifically addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the relevant classes used.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations of a macrocycle but lacks specific details on the implementation and results."
+      }
+    },
+    {
+      "question": "Generate 3D conformation of a macrocycle",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations of macrocycles using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, which details the use of OpenEye Omega Toolkit for generating 3D conformations of macrocycles.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and tools used to generate a 3D conformation of a macrocycle, but it lacks specific code examples or a complete implementation."
+      }
+    },
+    {
+      "question": "Calculate the number of stereocenters of a molecule with Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.5,
+      "triad_avg": 0.8333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a direct method for calculating the number of stereocenters in a molecule using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the purpose and functionality of the code.",
+        "answer_relevance": "The answer provides a general overview of how to calculate stereocenters using the OpenEye Omega Toolkit but does not directly calculate or provide the number of stereocenters for a specific molecule."
+      }
+    },
+    {
+      "question": "Check if molecule is a macrocycle",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations on how to check if a molecule is a macrocycle using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, particularly regarding the use of the OEIsMacrocycle function and its default behavior.",
+        "answer_relevance": "The answer provides a detailed explanation of how to determine if a molecule is a macrocycle but lacks a direct response to the question."
+      }
+    },
+    {
+      "question": "Remove duplicate conformers from ensemble",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a direct code solution for removing duplicate conformers from an ensemble using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the functionality of the OEOmega classes and the deduplication process.",
+        "answer_relevance": "The answer provides a relevant explanation of the process and tools used to remove duplicate conformers, but it lacks specific code examples or a clear step-by-step guide."
+      }
+    },
+    {
+      "question": "Write out conformer energy",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.2,
+      "triad_avg": 0.7333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete code example for writing out conformer energy using the OpenEye Omega TK Python API, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the purpose and functionality of the code.",
+        "answer_relevance": "The answer provides context about generating conformers and calculating energies but does not directly write out conformer energy as requested."
+      }
+    },
+    {
+      "question": "Generate Missing Fragments from input database with Omega",
+      "context_relevance": 0.8,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.8667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks primarily focus on generating and retrieving missing fragments using Omega, which is relevant to the question about generating missing fragments from an input database.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the classes used.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes but lacks specific implementation details or examples."
+      }
+    },
+    {
+      "question": "Retrieve Missing Fragments from fragment library in Omega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for retrieving missing fragments from the fragment library in Omega.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the process of retrieving missing fragments using the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a detailed explanation of the process for retrieving missing fragments but lacks specific code examples or a direct implementation."
+      }
+    },
+    {
+      "question": "Generate conformers for a database of macrocycle molecules with OEMacrocycleOmega",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating conformers of macrocycle molecules using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating conformers of macrocycle molecules.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes for generating conformers but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "Filter a molecule database for macrocycles and generate conformers only for macrocycles",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "All retrieved chunks provide relevant code examples and explanations for filtering a molecule database for macrocycles and generating conformers specifically for those macrocycles.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, detailing the process of filtering macrocycles and generating conformers using the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a good overview of the process for filtering macrocycles and generating conformers, but lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "Generate macrocycle conformers with a maximum number of conformers set",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for generating macrocycle conformers with a specified maximum number of conformers using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the use of the OpenEye Omega TK Python API for generating macrocycle conformers with a maximum limit.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes for generating macrocycle conformers but lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "Route molecules through the correct Omega engine \u2014 standard Omega for small molecules, OEMacrocycleOmega for macrocycles",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide clear instructions and code examples for routing molecules through the correct Omega engine based on their type.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the routing of molecules through the appropriate Omega engines and the relevant classes and options used.",
+        "answer_relevance": "The answer provides a detailed explanation of routing molecules through the correct Omega engine but lacks specific code examples or implementation details."
+      }
+    },
+    {
+      "question": "Generate macrocycle conformers in aqueous solution using OEMacrocycleOmega with water dielectric constant",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating macrocycle conformers in aqueous solution using the OpenEye Omega TK Python API with the appropriate dielectric constant.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of OpenEye Omega Toolkit for generating macrocycle conformers in aqueous solution.",
+        "answer_relevance": "The answer provides relevant information about the process and classes involved but lacks specific code examples or detailed steps for implementation."
+      }
+    },
+    {
+      "question": "'Read a molecule from a file into OEChem'",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for reading a molecule from a file into OEChem.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the process of reading a molecule into OEChem.",
+        "answer_relevance": "The answer provides relevant information about reading a molecule into OEChem but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "'Write a molecule from OEChem'",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.5,
+      "triad_avg": 0.8333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples for writing a molecule using OEChem, which directly answers the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the process of reading and writing molecules using OEChem.",
+        "answer_relevance": "The answer provides relevant information about writing a molecule using OEChem but does not directly present a specific molecule as requested."
+      }
+    },
+    {
+      "question": "\"Generate conformations for my molecule with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating conformations using Omega, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of OpenEye Omega Toolkit for generating molecular conformations.",
+        "answer_relevance": "The answer provides relevant information about using Omega for generating conformations but lacks specific code examples or detailed steps for implementation."
+      }
+    },
+    {
+      "question": "\"Generate conformations for my database of molecules\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating conformations for a database of molecules using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit for generating conformations.",
+        "answer_relevance": "The answer provides a detailed explanation of how to generate conformations using the OpenEye Omega Toolkit, but it lacks specific code examples or implementation details."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereochemistry in my molecule with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples for enumerating unspecified stereochemistry using the OpenEye Omega TK Python API, which directly addresses the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the classes used.",
+        "answer_relevance": "The answer provides a good overview of how to enumerate unspecified stereochemistry using Omega, but it lacks specific details or examples of the code implementation."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereochemistry for my database of molecules with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples for enumerating unspecified stereochemistry using the OpenEye Omega TK Python API, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the relevant classes and options used.",
+        "answer_relevance": "The answer provides relevant information about enumerating stereochemistry using Omega, but it lacks specific details or examples of the code implementation."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereochemistry for molecules up to 3 max unspecified stereocenters\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for enumerating unspecified stereochemistry for molecules with up to 3 unspecified stereocenters.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the enumeration of unspecified stereochemistry and the use of OpenEye Omega TK Python API.",
+        "answer_relevance": "The answer provides a good overview of the code's purpose and functionality but lacks specific details on how the enumeration of stereochemistry is implemented."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereochemistry for molecules up to 5 max unspecified stereocenters\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for enumerating unspecified stereochemistry for molecules with up to 5 unspecified stereocenters using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and functionality.",
+        "answer_relevance": "The answer provides relevant information about enumerating stereochemistry but lacks specific details on the enumeration process itself."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for enumerating unspecified stereocenters and generating 3D conformers using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, detailing the use of OpenEye Omega Toolkit for enumerating stereocenters and generating 3D conformers.",
+        "answer_relevance": "The answer provides relevant information about enumerating stereocenters and generating 3D conformers, but it lacks specific details on the enumeration process and does not directly address the question's request for enumeration."
+      }
+    },
+    {
+      "question": "\"Enumerate unspecified stereocenters and generate 3D conformers with Omega for a molecule database\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code snippets and explanations for enumerating unspecified stereocenters and generating 3D conformers using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and the classes used.",
+        "answer_relevance": "The answer provides a good overview of the process and tools involved in enumerating stereocenters and generating 3D conformers, but it lacks specific details on the enumeration of unspecified stereocenters."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with Omega with max confs of 1\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete and relevant code example for generating 3D conformations with Omega with a maximum of 1 conformation.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the classes used.",
+        "answer_relevance": "The answer provides a good overview of the Omega toolkit and its configuration for generating 3D conformations, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations using with Omega for docking\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for generating 3D conformations using Omega, which directly addresses the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of OpenEye Omega Toolkit for generating 3D conformations for docking.",
+        "answer_relevance": "The answer provides a detailed explanation of using Omega for generating 3D conformations for docking, but it lacks specific code examples or implementation details."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations using Omega for ROCS\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide detailed code examples for generating 3D conformations using Omega for ROCS, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the purpose and functionality of the code for generating 3D conformations using Omega for ROCS.",
+        "answer_relevance": "The answer provides a good overview of the process and tools involved in generating 3D conformations for ROCS but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "'Generate 3D conformations with Omega for FastROCS\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete and relevant code example for generating 3D conformations with Omega specifically for FastROCS.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically regarding the use of OpenEye Omega Toolkit for generating 3D conformations with FastROCS.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and relevant classes for generating 3D conformations with Omega for FastROCS, but it lacks specific code examples or implementation details."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with Omega for freeform\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete and relevant code example for generating 3D conformations with Omega for freeform.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and the classes used.",
+        "answer_relevance": "The answer provides a good overview of the process and tools used for generating 3D conformations but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with GPU Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide detailed code examples for generating 3D conformations using GPU Omega, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of GPU Omega for generating 3D conformations.",
+        "answer_relevance": "The answer provides a good overview of using GPU Omega for 3D conformation generation but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with Omega using thompson sampling\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a detailed code example for generating 3D conformations with Omega using Thompson sampling, directly addressing the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, specifically the use of Thompson sampling and the relevant OpenEye Omega Toolkit classes.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations using Omega and mentions Thompson sampling, but it lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformastions with Omega using alternative torsion library\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a complete and relevant code example for generating 3D conformations with Omega using an alternative torsion library.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit and the specific torsion library.",
+        "answer_relevance": "The answer provides a detailed explanation of the code's functionality and the use of an alternative torsion library, but it lacks specific code examples or implementation details."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with Omega using electrostatics\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code and instructions for generating 3D conformations with Omega using electrostatics.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of the OpenEye Omega Toolkit and the relevant classes and options.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and tools used for generating 3D conformations with electrostatics, but it lacks specific code examples or a step-by-step guide."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with a fixed substructure\n\"",
+      "context_relevance": 1.0,
+      "groundedness": 0.8,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.8667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations with a fixed substructure using the OpenEye Omega TK Python API.",
+        "groundedness": "Most claims about the code's purpose and functionality are supported by the context, but some details about specific classes and options are not explicitly mentioned.",
+        "answer_relevance": "The answer provides a relevant explanation of the process and tools used for generating 3D conformations with a fixed substructure, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations with a fixed substructure given a SMARTS patttern\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations with a fixed substructure using SMARTS patterns.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, which describes the use of SMARTS patterns and the relevant OpenEye classes for generating 3D conformations.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations with a fixed substructure using SMARTS patterns, but lacks specific code examples or detailed implementation steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations of a molecule and hold a piece of the molecule fixed\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code examples and explanations for generating 3D conformations of a molecule while holding a piece of the molecule fixed.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, which describes the process of generating 3D conformations while keeping a part of the molecule fixed.",
+        "answer_relevance": "The answer provides a good overview of the process and relevant classes for generating 3D conformations while fixing part of a molecule, but it lacks specific implementation details or code examples."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations and apply MCS constraint on a portion of my molecule\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code snippets and explanations for generating 3D conformations and applying constraints on a portion of a molecule using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, which details the use of OpenEye Omega Toolkit for generating 3D conformations with MCS constraints.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations and applying MCS constraints, but it lacks specific details on how to implement the code."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations of a macrocycle molecule with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code and instructions for generating 3D conformations of a macrocycle molecule using the OpenEye Omega API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the classes used.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations of macrocycles using Omega, but it lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformations of a macrocycle molecule in a specific solution\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code and explanations for generating 3D conformations of a macrocycle molecule in a specific solution using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the use of OpenEye Omega Toolkit for generating 3D conformations of macrocycle molecules and the significance of the dielectric constant.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations of a macrocycle molecule but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Generate 3D conformation of a macrocycle\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide relevant code and explanations for generating 3D conformations of macrocycles using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the relevant classes used in the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides relevant information about generating 3D conformations of macrocycles but lacks specific code examples or detailed steps."
+      }
+    },
+    {
+      "question": "\"Calculate the number of stereocenters of a molecule with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.7,
+      "triad_avg": 0.9,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations on how to calculate the number of stereocenters using the OpenEye Omega toolkit.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and functionality.",
+        "answer_relevance": "The answer provides a detailed explanation of the method to calculate stereocenters but does not directly provide the number of stereocenters for a specific molecule."
+      }
+    },
+    {
+      "question": "\"Check if molecule is a macrocycle\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 1.0,
+      "triad_avg": 1.0,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct information and code on how to check if a molecule is a macrocycle using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, particularly regarding the use of the OEIsMacrocycle function and its criteria for determining macrocycles.",
+        "answer_relevance": "The answer provides a clear explanation of how to determine if a molecule is a macrocycle using specific functions and tools."
+      }
+    },
+    {
+      "question": "\"Remove duplicate conformers from ensemble\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a direct answer and code example for removing duplicate conformers from an ensemble using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the functionality of the code and the relevant classes.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and relevant classes but lacks specific code examples or a clear step-by-step method for removing duplicates."
+      }
+    },
+    {
+      "question": "'Write out conformer energy'",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.5,
+      "triad_avg": 0.8333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide a direct answer and code example for writing out conformer energy using the OpenEye Omega TK Python API.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's purpose and the classes used.",
+        "answer_relevance": "The answer provides relevant information about generating conformers and calculating their energies but does not explicitly write out the conformer energy as requested."
+      }
+    },
+    {
+      "question": "\"Generate Missing Fragments from input database with Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide direct code examples and explanations for generating missing fragments using Omega, which directly addresses the question.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the code's functionality and the classes used.",
+        "answer_relevance": "The answer provides a detailed explanation of the code's functionality and relevant classes but lacks specific code examples or a complete overview of the implementation process."
+      }
+    },
+    {
+      "question": "\"Retrieve Missing Fragments from fragment library in Omega\"",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.9,
+      "triad_avg": 0.9667,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide the exact code and explanation needed to retrieve missing fragments from the fragment library in Omega.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, accurately describing the process of retrieving missing fragments using the OpenEye Omega Toolkit.",
+        "answer_relevance": "The answer provides a detailed explanation of the process and relevant classes involved in retrieving missing fragments, but it could be more concise and directly focused on the specific retrieval action."
+      }
+    },
+    {
+      "question": "How do I enumerate stereoisomers using OEFlipper?",
+      "context_relevance": 1.0,
+      "groundedness": 1.0,
+      "answer_relevance": 0.8,
+      "triad_avg": 0.9333,
+      "reasons": {
+        "context_relevance": "The retrieved chunks provide clear instructions and code examples on how to use OEFlipper to enumerate stereoisomers.",
+        "groundedness": "Every factual claim in the answer is supported by the provided context, including the use of OEFlipper and OEFlipperOptions for enumerating stereoisomers.",
+        "answer_relevance": "The answer provides a good overview of how to use OEFlipper for enumerating stereoisomers but lacks specific code examples and detailed steps."
+      }
+    }
+  ]
+}
