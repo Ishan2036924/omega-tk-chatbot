@@ -1,4 +1,4 @@
-import { MessageSquare, Clock, Bookmark, BarChart2, BookOpen, Plus, X, Zap } from 'lucide-react'
+import { MessageSquare, Clock, Bookmark, BarChart2, BookOpen, Plus, Zap, LogOut } from 'lucide-react'
 
 const NAV_ITEMS = [
   { icon: MessageSquare, label: 'All Chats',      id: 'all' },
@@ -21,7 +21,27 @@ function formatTime(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-export default function LeftPanel({ sessions, currentSessionId, onSelectSession, onNewChat, activeView, onSelectView }) {
+/**
+ * LeftPanel
+ *
+ * New props (Feature 1):
+ *   user     — Supabase user object { email, id, … }
+ *   onLogout — called when the user clicks the Logout button
+ */
+export default function LeftPanel({
+  sessions,
+  currentSessionId,
+  onSelectSession,
+  onNewChat,
+  activeView,
+  onSelectView,
+  user,
+  onLogout,
+}) {
+  // First letter of email for the avatar
+  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? '?'
+  const emailLabel   = user?.email ?? ''
+
   return (
     <div className="w-[260px] h-full bg-sidebar flex flex-col select-none">
 
@@ -107,7 +127,7 @@ export default function LeftPanel({ sessions, currentSessionId, onSelectSession,
       </div>
 
       {/* New Chat button */}
-      <div className="p-3 border-t border-white/5">
+      <div className="px-3 pt-3 border-t border-white/5">
         <button
           onClick={onNewChat}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary hover:bg-primary-dark transition-colors text-white text-sm font-semibold"
@@ -116,6 +136,30 @@ export default function LeftPanel({ sessions, currentSessionId, onSelectSession,
           New Chat
         </button>
       </div>
+
+      {/* User footer — avatar + email + logout */}
+      {user && (
+        <div className="px-3 py-3 flex items-center gap-2.5 border-t border-white/5">
+          {/* Avatar */}
+          <div className="w-7 h-7 rounded-full bg-primary/60 flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-[11px] font-bold leading-none">{avatarLetter}</span>
+          </div>
+
+          {/* Email — truncated */}
+          <p className="text-white/50 text-[10px] leading-tight truncate flex-1" title={emailLabel}>
+            {emailLabel}
+          </p>
+
+          {/* Logout */}
+          <button
+            onClick={onLogout}
+            title="Sign out"
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors flex-shrink-0"
+          >
+            <LogOut size={13} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

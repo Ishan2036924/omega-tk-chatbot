@@ -29,7 +29,7 @@ function SourceItem({ item, onDelete, isDeleting }) {
   )
 }
 
-export default function KnowledgePanel({ sessionId }) {
+export default function KnowledgePanel({ sessionId, token = null }) {
   const [sources, setSources]         = useState([])
   const [pasteText, setPasteText]     = useState('')
   const [sourceName, setSourceName]   = useState('')
@@ -46,9 +46,9 @@ export default function KnowledgePanel({ sessionId }) {
 
   const loadSources = useCallback(async () => {
     if (!sessionId) return
-    const data = await listKnowledge(sessionId)
+    const data = await listKnowledge(sessionId, token)
     setSources(data || [])
-  }, [sessionId])
+  }, [sessionId, token])
 
   useEffect(() => { loadSources() }, [loadSources])
 
@@ -58,7 +58,7 @@ export default function KnowledgePanel({ sessionId }) {
     const name = sourceName.trim() || `note-${Date.now()}`
     setIsAdding(true)
     try {
-      const res = await addKnowledge(pasteText, name, sessionId)
+      const res = await addKnowledge(pasteText, name, sessionId, token)
       showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${name}"`)
       setPasteText('')
       setSourceName('')
@@ -76,7 +76,7 @@ export default function KnowledgePanel({ sessionId }) {
     if (file.size > 5 * 1024 * 1024) { showToast('error', 'File too large — max 5 MB'); return }
     setIsAdding(true)
     try {
-      const res = await addKnowledgeFile(file, sessionId)
+      const res = await addKnowledgeFile(file, sessionId, token)
       showToast('success', `Added ${res.chunks_added} chunk${res.chunks_added !== 1 ? 's' : ''} from "${res.source}"`)
       await loadSources()
     } catch (err) {
@@ -89,7 +89,7 @@ export default function KnowledgePanel({ sessionId }) {
   const handleDelete = async (chunkId, source) => {
     setIsDeleting(chunkId)
     try {
-      await deleteKnowledge(chunkId)
+      await deleteKnowledge(chunkId, token)
       showToast('success', `Deleted "${source}"`)
       setSources(prev => prev.filter(s => s.id !== chunkId))
     } catch (err) {
@@ -116,7 +116,7 @@ export default function KnowledgePanel({ sessionId }) {
           <h2 className="text-sm font-semibold text-gray-800">Knowledge Base</h2>
         </div>
         <p className="text-[11px] text-gray-400 mt-0.5 ml-[23px]">
-          Enrich the assistant with your own docs · session-scoped
+          Enrich the assistant with your own docs · persists across all your sessions
         </p>
       </div>
 
@@ -233,7 +233,7 @@ export default function KnowledgePanel({ sessionId }) {
         {/* Info note */}
         {sources.length > 0 && (
           <div className="text-[10px] text-gray-300 leading-relaxed px-1">
-            Knowledge chunks are retrieved alongside FAISS docs when you chat in this session.
+            Knowledge chunks are retrieved alongside FAISS docs in every session for your account.
           </div>
         )}
 

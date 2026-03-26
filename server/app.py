@@ -36,7 +36,7 @@ sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=_PROJECT_ROOT / ".env")
 
-from fastapi import FastAPI, HTTPException, Form, File, UploadFile
+from fastapi import FastAPI, HTTPException, Form, File, UploadFile, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -94,17 +94,50 @@ def _get_supabase():
     return _supabase_client
 
 
-def _sb_save_message(session_id: str, role: str, content: str) -> None:
+# ── JWT auth dependency ───────────────────────────────────────────────────────
+
+def get_current_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
+    """
+    Extract user_id from a Supabase JWT Bearer token.
+    Returns None gracefully if no token present, secret missing, or verification fails.
+    Requires SUPABASE_JWT_SECRET env var (Supabase dashboard → Settings → API → JWT Settings).
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization[len("Bearer "):]
+    secret = os.getenv("SUPABASE_JWT_SECRET")
+    if not secret:
+        return None
+    try:
+        import jwt as _pyjwt
+        payload = _pyjwt.decode(
+            token,
+            secret,
+            algorithms=["HS256"],
+            audience="authenticated",
+            options={"verify_exp": True},
+        )
+        return payload.get("sub")  # Supabase stores user_id in the 'sub' claim
+    except Exception as exc:
+        logger.debug("JWT verification failed: %s", exc)
+        return None
+
+
+def _sb_save_message(
+    session_id: str,
+    role: str,
+    content: str,
+    user_id: Optional[str] = None,
+) -> None:
     """Persist a chat turn to chat_history. Fire-and-forget."""
     sb = _get_supabase()
     if sb is None:
         return
     try:
-        sb.table("chat_history").insert({
-            "session_id": session_id,
-            "role": role,
-            "content": content,
-        }).execute()
+        record: dict = {"session_id": session_id, "role": role, "content": content}
+        if user_id:
+            record["user_id"] = user_id
+        sb.table("chat_history").insert(record).execute()
     except Exception as exc:
         logger.warning("Supabase chat_history insert failed: %s", exc)
 
@@ -116,13 +149,14 @@ def _sb_log_query(
     intent: str,
     faiss_score: Optional[float],
     latency_ms: int,
+    user_id: Optional[str] = None,
 ) -> None:
     """Log query analytics to queries_log. Fire-and-forget."""
     sb = _get_supabase()
     if sb is None:
         return
     try:
-        sb.table("queries_log").insert({
+        record: dict = {
             "session_id": session_id,
             "message": message,
             "intent": intent,
@@ -131,7 +165,10 @@ def _sb_log_query(
             "attempts": response.attempts,
             "faiss_score": faiss_score,
             "latency_ms": latency_ms,
-        }).execute()
+        }
+        if user_id:
+            record["user_id"] = user_id
+        sb.table("queries_log").insert(record).execute()
     except Exception as exc:
         logger.warning("Supabase queries_log insert failed: %s", exc)
 
@@ -146,6 +183,22 @@ def _response_text(response: "ChatResponse") -> str:
     if response.code:
         parts.append(f"```{response.language or 'python'}\n{response.code}\n```")
     return "\n\n".join(parts)
+
+
+def _sb_upsert_session(session_id: str, user_id: str, title: str = "Omega TK Session") -> None:
+    """Create or update a row in chat_sessions so the left panel can list all sessions. Fire-and-forget."""
+    sb = _get_supabase()
+    if sb is None:
+        return
+    try:
+        sb.table("chat_sessions").upsert({
+            "id": session_id,
+            "user_id": user_id,
+            "title": title,
+            "last_active": datetime.now(timezone.utc).isoformat(),
+        }).execute()
+    except Exception as exc:
+        logger.warning("Session upsert failed: %s", exc)
 
 
 # ── Knowledge base helpers ────────────────────────────────────────────────────
@@ -192,19 +245,27 @@ def _cosine_sim(a: list[float], b: list[float]) -> float:
     return float(np.dot(a_arr, b_arr) / norm) if norm > 0 else 0.0
 
 
-def _retrieve_knowledge(query: str, session_id: str, top_k: int = 3, threshold: float = 0.25) -> list[dict]:
-    """Retrieve relevant user-uploaded knowledge chunks via in-Python cosine similarity."""
+def _retrieve_knowledge(
+    query: str,
+    session_id: str,
+    user_id: Optional[str] = None,
+    top_k: int = 3,
+    threshold: float = 0.25,
+) -> list[dict]:
+    """
+    Retrieve relevant user-uploaded knowledge chunks via in-Python cosine similarity.
+    Prefers querying by user_id (cross-session, permanent) when available;
+    falls back to session_id for unauthenticated callers.
+    """
     sb = _get_supabase()
     if sb is None or _generator is None:
         return []
     try:
-        rows = (
-            sb.table("knowledge_chunks")
-            .select("id, source, text, embedding")
-            .eq("session_id", session_id)
-            .execute()
-            .data
-        )
+        base = sb.table("knowledge_chunks").select("id, source, text, embedding")
+        if user_id:
+            rows = base.eq("user_id", user_id).execute().data
+        else:
+            rows = base.eq("session_id", session_id).execute().data
         if not rows:
             return []
         query_emb = _embed_text(query)
@@ -822,17 +883,23 @@ def health():
 
 
 @app.post("/api/feedback")
-def feedback_endpoint(request: FeedbackRequest):
+def feedback_endpoint(
+    request: FeedbackRequest,
+    user_id: Optional[str] = Depends(get_current_user),
+):
     """Record thumbs-up / thumbs-down for a single bot response."""
     sb = _get_supabase()
     if sb is None:
         return {"ok": False, "reason": "Supabase not configured"}
     try:
-        sb.table("feedback").insert({
+        record: dict = {
             "session_id": request.session_id,
             "message_id": request.message_id,
             "feedback": request.feedback,
-        }).execute()
+        }
+        if user_id:
+            record["user_id"] = user_id
+        sb.table("feedback").insert(record).execute()
         return {"ok": True}
     except Exception as exc:
         logger.warning("Supabase feedback insert failed: %s", exc)
@@ -970,23 +1037,52 @@ async def transcribe_endpoint(audio: UploadFile = File(...)):
 # ── History endpoint ─────────────────────────────────────────────────────────
 
 @app.get("/api/history/{session_id}")
-def history_endpoint(session_id: str):
-    """Return stored chat history for a session (ASC order)."""
+def history_endpoint(
+    session_id: str,
+    user_id: Optional[str] = Depends(get_current_user),
+):
+    """Return stored chat history for a session (ASC order).
+    When the user is authenticated the query is scoped to their user_id so
+    they cannot read another user's session history."""
+    sb = _get_supabase()
+    if sb is None:
+        return []
+    try:
+        query = (
+            sb.table("chat_history")
+            .select("role, content, created_at")
+            .eq("session_id", session_id)
+        )
+        if user_id:
+            query = query.eq("user_id", user_id)
+        rows = query.order("created_at", desc=False).execute().data
+        return rows
+    except Exception as exc:
+        logger.warning("History load failed: %s", exc)
+        return []
+
+
+@app.get("/api/sessions")
+def sessions_endpoint(user_id: Optional[str] = Depends(get_current_user)):
+    """Return all chat sessions for the authenticated user, ordered by last_active DESC.
+    Used by the LeftPanel to populate the full session history list on login."""
+    if not user_id:
+        return []
     sb = _get_supabase()
     if sb is None:
         return []
     try:
         rows = (
-            sb.table("chat_history")
-            .select("role, content, created_at")
-            .eq("session_id", session_id)
-            .order("created_at", desc=False)
+            sb.table("chat_sessions")
+            .select("id, title, created_at, last_active")
+            .eq("user_id", user_id)
+            .order("last_active", desc=True)
             .execute()
             .data
         )
         return rows
     except Exception as exc:
-        logger.warning("History load failed: %s", exc)
+        logger.warning("Sessions load failed: %s", exc)
         return []
 
 
@@ -997,6 +1093,7 @@ async def add_knowledge_endpoint(
     text: str = Form(...),
     source: str = Form("user_text"),
     session_id: str = Form(...),
+    user_id: Optional[str] = Depends(get_current_user),
 ):
     """Chunk, embed, and store pasted text into Supabase knowledge_chunks."""
     sb = _get_supabase()
@@ -1011,12 +1108,15 @@ async def add_knowledge_endpoint(
     for chunk in chunks:
         try:
             emb = _embed_text(chunk)
-            sb.table("knowledge_chunks").insert({
+            record: dict = {
                 "session_id": session_id,
                 "source": source,
                 "text": chunk,
                 "embedding": emb,
-            }).execute()
+            }
+            if user_id:
+                record["user_id"] = user_id
+            sb.table("knowledge_chunks").insert(record).execute()
             inserted += 1
         except Exception as exc:
             logger.warning("Knowledge chunk insert failed: %s", exc)
@@ -1028,6 +1128,7 @@ async def add_knowledge_endpoint(
 async def add_knowledge_file_endpoint(
     session_id: str = Form(...),
     file: UploadFile = File(...),
+    user_id: Optional[str] = Depends(get_current_user),
 ):
     """Upload a file, extract text, chunk and embed into knowledge_chunks."""
     sb = _get_supabase()
@@ -1056,12 +1157,15 @@ async def add_knowledge_file_endpoint(
     for chunk in chunks:
         try:
             emb = _embed_text(chunk)
-            sb.table("knowledge_chunks").insert({
+            record: dict = {
                 "session_id": session_id,
                 "source": source,
                 "text": chunk,
                 "embedding": emb,
-            }).execute()
+            }
+            if user_id:
+                record["user_id"] = user_id
+            sb.table("knowledge_chunks").insert(record).execute()
             inserted += 1
         except Exception as exc:
             logger.warning("Knowledge file chunk insert failed: %s", exc)
@@ -1070,20 +1174,22 @@ async def add_knowledge_file_endpoint(
 
 
 @app.get("/api/knowledge/{session_id}")
-def list_knowledge_endpoint(session_id: str):
-    """List unique knowledge sources uploaded for a session."""
+def list_knowledge_endpoint(
+    session_id: str,
+    user_id: Optional[str] = Depends(get_current_user),
+):
+    """List unique knowledge sources. When authenticated, returns all sources
+    for the user across every session (permanent knowledge base).
+    Falls back to session-scoped listing for unauthenticated requests."""
     sb = _get_supabase()
     if sb is None:
         return []
     try:
-        rows = (
-            sb.table("knowledge_chunks")
-            .select("id, source, created_at")
-            .eq("session_id", session_id)
-            .order("created_at", desc=False)
-            .execute()
-            .data
-        )
+        base = sb.table("knowledge_chunks").select("id, source, created_at")
+        if user_id:
+            rows = base.eq("user_id", user_id).order("created_at", desc=False).execute().data
+        else:
+            rows = base.eq("session_id", session_id).order("created_at", desc=False).execute().data
         sources: dict[str, dict] = {}
         for r in rows:
             src = r["source"]
@@ -1102,15 +1208,20 @@ def list_knowledge_endpoint(session_id: str):
 
 
 @app.delete("/api/knowledge/{chunk_id}")
-def delete_knowledge_endpoint(chunk_id: str):
-    """Delete all chunks sharing the same source+session as the given chunk_id."""
+def delete_knowledge_endpoint(
+    chunk_id: str,
+    user_id: Optional[str] = Depends(get_current_user),
+):
+    """Delete all chunks sharing the same source as the given chunk_id.
+    When authenticated, scopes deletion to the user_id so users cannot delete
+    each other's knowledge. Falls back to session_id scope for unauthenticated calls."""
     sb = _get_supabase()
     if sb is None:
         raise HTTPException(status_code=503, detail="Supabase not configured")
     try:
         row = (
             sb.table("knowledge_chunks")
-            .select("source, session_id")
+            .select("source, session_id, user_id")
             .eq("id", chunk_id)
             .execute()
             .data
@@ -1119,8 +1230,17 @@ def delete_knowledge_endpoint(chunk_id: str):
             raise HTTPException(status_code=404, detail="Chunk not found")
         source     = row[0]["source"]
         session_id = row[0]["session_id"]
-        sb.table("knowledge_chunks").delete().eq("session_id", session_id).eq("source", source).execute()
-        logger.info("Knowledge: deleted all chunks for source '%s' in session %s", source, session_id)
+        chunk_owner = row[0].get("user_id")
+
+        # Scope delete by user_id when auth is available
+        if user_id and chunk_owner:
+            if chunk_owner != user_id:
+                raise HTTPException(status_code=403, detail="Not authorised to delete this chunk")
+            sb.table("knowledge_chunks").delete().eq("user_id", user_id).eq("source", source).execute()
+        else:
+            sb.table("knowledge_chunks").delete().eq("session_id", session_id).eq("source", source).execute()
+
+        logger.info("Knowledge: deleted all chunks for source '%s'", source)
         return {"ok": True, "deleted_source": source}
     except HTTPException:
         raise
@@ -1137,6 +1257,7 @@ async def chat_file_endpoint(
     history_json: str = Form("[]"),
     session_id: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
+    user_id: Optional[str] = Depends(get_current_user),
 ):
     """Accept multipart/form-data chat request with an optional file attachment."""
     # ── Parse history ──────────────────────────────────────────────────────────
@@ -1172,19 +1293,22 @@ async def chat_file_endpoint(
     req = ChatRequest(message=message, history=history, session_id=session_id)
     t0 = int(time.time() * 1000)
     sid = session_id or "anon"
-    _sb_save_message(sid, "user", message)
+    _sb_save_message(sid, "user", message, user_id=user_id)
 
-    response, intent, top_score = _chat_logic(req, extra_context=extra_context)
+    response, intent, top_score = _chat_logic(req, extra_context=extra_context, user_id=user_id)
 
     latency = int(time.time() * 1000) - t0
-    _sb_save_message(sid, "assistant", _response_text(response))
-    _sb_log_query(sid, message, response, intent, top_score, latency)
+    _sb_save_message(sid, "assistant", _response_text(response), user_id=user_id)
+    _sb_log_query(sid, message, response, intent, top_score, latency, user_id=user_id)
+    if user_id and sid not in ("anon", ""):
+        _sb_upsert_session(sid, user_id)
     return response
 
 
 def _chat_logic(
     request: ChatRequest,
     extra_context: str = "",
+    user_id: Optional[str] = None,
 ) -> tuple[ChatResponse, str, Optional[float]]:
     """
     Core chat pipeline. Returns (response, intent_label, top_faiss_score).
@@ -1260,13 +1384,21 @@ def _chat_logic(
 
     top_score: Optional[float] = chunks[0]["score"] if chunks else None
 
-    # ── Knowledge base retrieval (session-scoped) ─────────────────────────────
+    # ── Knowledge base retrieval (user-scoped when auth'd, else session-scoped) ─
     knowledge_chunks: list[dict] = []
-    if request.session_id and request.session_id not in ("anon", ""):
+    if user_id or (request.session_id and request.session_id not in ("anon", "")):
         try:
-            knowledge_chunks = _retrieve_knowledge(retrieval_query, request.session_id)
+            knowledge_chunks = _retrieve_knowledge(
+                retrieval_query,
+                session_id=request.session_id or "anon",
+                user_id=user_id,
+            )
             if knowledge_chunks:
-                logger.info("Knowledge base: %d chunk(s) for session %s", len(knowledge_chunks), request.session_id)
+                logger.info(
+                    "Knowledge base: %d chunk(s) for %s",
+                    len(knowledge_chunks),
+                    f"user {user_id}" if user_id else f"session {request.session_id}",
+                )
         except Exception as kexc:
             logger.warning("Knowledge retrieval error: %s", kexc)
 
@@ -1366,18 +1498,23 @@ def _chat_logic(
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest):
+def chat_endpoint(
+    request: ChatRequest,
+    user_id: Optional[str] = Depends(get_current_user),
+):
     """Thin wrapper: runs _chat_logic then logs to Supabase (fire-and-forget)."""
     t0 = int(time.time() * 1000)
     session_id = request.session_id or "anon"
 
-    _sb_save_message(session_id, "user", request.message)
+    _sb_save_message(session_id, "user", request.message, user_id=user_id)
 
-    response, intent, top_score = _chat_logic(request)
+    response, intent, top_score = _chat_logic(request, user_id=user_id)
 
     latency = int(time.time() * 1000) - t0
-    _sb_save_message(session_id, "assistant", _response_text(response))
-    _sb_log_query(session_id, request.message, response, intent, top_score, latency)
+    _sb_save_message(session_id, "assistant", _response_text(response), user_id=user_id)
+    _sb_log_query(session_id, request.message, response, intent, top_score, latency, user_id=user_id)
+    if user_id and session_id not in ("anon", ""):
+        _sb_upsert_session(session_id, user_id)
 
     return response
 

@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
+import { supabase } from './lib/supabaseClient.js'
+import AuthPage from './components/AuthPage.jsx'
 import LeftPanel from './components/LeftPanel.jsx'
 import MiddlePanel from './components/MiddlePanel.jsx'
 import RightPanel from './components/RightPanel.jsx'
-import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory } from './api.js'
+import { sendMessage, sendMessageWithFile, submitFeedback, loadHistory, loadUserSessions } from './api.js'
 
 const genId = () => Math.random().toString(36).slice(2, 9)
-
-const LS_KEY = 'omega_session_id'
 
 /** Parse a stored bot content string back into ChatResponse-shaped data. */
 function parseStoredBotContent(content) {
@@ -52,70 +52,138 @@ function buildExportMarkdown(session) {
 }
 
 export default function App() {
-  const [sessions, setSessions] = useState([])
+  // ── Auth state ───────────────────────────────────────────────────────────────
+  const [user, setUser]             = useState(null)          // Supabase user object
+  const [accessToken, setAccessToken] = useState(null)        // JWT for API calls
+  const [authLoading, setAuthLoading] = useState(true)        // show nothing until session resolved
+
+  // ── App state ────────────────────────────────────────────────────────────────
+  const [sessions, setSessions]           = useState([])
   const [currentSessionId, setCurrentSessionId] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [leftOpen, setLeftOpen] = useState(false)   // mobile overlay
-  const [rightOpen, setRightOpen] = useState(false) // mobile overlay
-  const [view, setView] = useState('chat')          // 'chat' | 'analytics' | 'knowledge'
-  const [toast, setToast] = useState(null)          // transient notification string
+  const [isLoading, setIsLoading]         = useState(false)
+  const [leftOpen, setLeftOpen]           = useState(false)
+  const [rightOpen, setRightOpen]         = useState(false)
+  const [view, setView]                   = useState('chat')
+  const [toast, setToast]                 = useState(null)
 
   const currentSession = sessions.find(s => s.id === currentSessionId) ?? null
-  const messages = currentSession?.messages ?? []
+  const messages       = currentSession?.messages ?? []
 
   const showToast = useCallback((msg) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
   }, [])
 
-  /* ── Feature 1+2: persist session_id in localStorage, restore history ── */
+  // ── Auth: resolve existing session on mount, subscribe to changes ─────────
   useEffect(() => {
-    let sid = localStorage.getItem(LS_KEY)
-    if (!sid) {
-      sid = genId()
-      localStorage.setItem(LS_KEY, sid)
-    }
-    // Create placeholder session entry immediately
-    setSessions([{
-      id: sid,
-      title: 'Omega TK Session',
-      messages: [],
-      createdAt: new Date().toISOString(),
-      lastActive: new Date().toISOString(),
-    }])
-    setCurrentSessionId(sid)
+    // Check if there is an existing Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUser(session.user)
+        setAccessToken(session.access_token)
+      }
+      setAuthLoading(false)
+    })
 
-    // Load history from Supabase and restore messages
-    loadHistory(sid).then(rows => {
-      if (!rows || rows.length === 0) return
-      const msgs = rows.map(r => {
-        const isBot = r.role === 'assistant'
-        return {
-          id: genId(),
-          role: isBot ? 'bot' : 'user',
-          text: isBot ? undefined : r.content,
-          data: isBot ? parseStoredBotContent(r.content) : undefined,
-          timestamp: r.created_at || new Date().toISOString(),
-          feedback: null,
-        }
-      })
-      const firstUser = msgs.find(m => m.role === 'user')
-      const title = firstUser
-        ? (firstUser.text.length > 42 ? firstUser.text.slice(0, 42) + '…' : firstUser.text)
-        : 'Restored Session'
-      setSessions([{
-        id: sid,
-        title,
-        messages: msgs,
-        createdAt: msgs[0]?.timestamp || new Date().toISOString(),
-        lastActive: msgs.at(-1)?.timestamp || new Date().toISOString(),
-      }])
-      showToast(`History restored · ${msgs.length} messages`)
-    }).catch(() => {})
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Listen for login / logout / token refresh events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setUser(session.user)
+        setAccessToken(session.access_token)
+      } else {
+        setUser(null)
+        setAccessToken(null)
+        setSessions([])
+        setCurrentSessionId(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  /* ── Send a message ─────────────────────────────────── */
+  // ── Load all past sessions from Supabase after login ─────────────────────
+  useEffect(() => {
+    if (!user || !accessToken) return
+
+    loadUserSessions(accessToken).then(rows => {
+      if (!rows || rows.length === 0) {
+        // No history yet — open a fresh session
+        const sid = genId()
+        setSessions([{
+          id: sid,
+          title: 'Omega TK Session',
+          messages: [],
+          createdAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+        }])
+        setCurrentSessionId(sid)
+        return
+      }
+
+      // Hydrate all sessions from Supabase (messages will be loaded on demand)
+      const hydrated = rows.map(r => ({
+        id: r.id,
+        title: r.title || 'Omega TK Session',
+        messages: [],      // loaded lazily when the session is selected
+        createdAt: r.created_at || new Date().toISOString(),
+        lastActive: r.last_active || new Date().toISOString(),
+      }))
+      setSessions(hydrated)
+
+      // Auto-select the most recent session and load its messages
+      const mostRecent = hydrated[0]
+      setCurrentSessionId(mostRecent.id)
+      loadHistory(mostRecent.id, accessToken).then(msgRows => {
+        if (!msgRows || msgRows.length === 0) return
+        const msgs = msgRows.map(r => ({
+          id: genId(),
+          role: r.role === 'assistant' ? 'bot' : 'user',
+          text: r.role !== 'assistant' ? r.content : undefined,
+          data: r.role === 'assistant' ? parseStoredBotContent(r.content) : undefined,
+          timestamp: r.created_at || new Date().toISOString(),
+          feedback: null,
+        }))
+        setSessions(prev => prev.map(s =>
+          s.id === mostRecent.id ? { ...s, messages: msgs } : s
+        ))
+        showToast(`History restored · ${msgs.length} messages`)
+      }).catch(() => {})
+    }).catch(() => {
+      // loadUserSessions failed — start fresh
+      const sid = genId()
+      setSessions([{ id: sid, title: 'Omega TK Session', messages: [], createdAt: new Date().toISOString(), lastActive: new Date().toISOString() }])
+      setCurrentSessionId(sid)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, accessToken])
+
+  // ── Select a session and lazily load its messages ─────────────────────────
+  const handleSelectSession = useCallback(async (id) => {
+    setCurrentSessionId(id)
+    setView('chat')
+    setLeftOpen(false)
+
+    const session = sessions.find(s => s.id === id)
+    if (!session || session.messages.length > 0) return   // already loaded
+
+    try {
+      const rows = await loadHistory(id, accessToken)
+      if (!rows || rows.length === 0) return
+      const msgs = rows.map(r => ({
+        id: genId(),
+        role: r.role === 'assistant' ? 'bot' : 'user',
+        text: r.role !== 'assistant' ? r.content : undefined,
+        data: r.role === 'assistant' ? parseStoredBotContent(r.content) : undefined,
+        timestamp: r.created_at || new Date().toISOString(),
+        feedback: null,
+      }))
+      setSessions(prev => prev.map(s => s.id === id ? { ...s, messages: msgs } : s))
+    } catch {
+      // silently ignore — session just stays empty
+    }
+  }, [sessions, accessToken])
+
+  // ── Send a message ────────────────────────────────────────────────────────
   const handleSend = useCallback(async (text, file = null) => {
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
@@ -138,17 +206,12 @@ export default function App() {
     let sid = currentSessionId
     if (!sid) {
       sid = genId()
-      localStorage.setItem(LS_KEY, sid)
       const title = trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed
-      setSessions(prev => [{
-        id: sid, title, messages: [userMsg],
-        createdAt: new Date().toISOString(), lastActive: new Date().toISOString(),
-      }, ...prev])
+      setSessions(prev => [{ id: sid, title, messages: [userMsg], createdAt: new Date().toISOString(), lastActive: new Date().toISOString() }, ...prev])
       setCurrentSessionId(sid)
     } else {
       setSessions(prev => prev.map(s => {
         if (s.id !== sid) return s
-        // Update title on first real message (replaces placeholder title)
         const newTitle = s.messages.length === 0
           ? (trimmed.length > 42 ? trimmed.slice(0, 42) + '…' : trimmed)
           : s.title
@@ -159,8 +222,8 @@ export default function App() {
     setIsLoading(true)
     try {
       const data = file
-        ? await sendMessageWithFile(trimmed, history, sid, file)
-        : await sendMessage(trimmed, history, sid)
+        ? await sendMessageWithFile(trimmed, history, sid, file, accessToken)
+        : await sendMessage(trimmed, history, sid, accessToken)
       const botMsg = { id: genId(), role: 'bot', data, timestamp: new Date().toISOString(), feedback: null }
       setSessions(prev => prev.map(s =>
         s.id === sid ? { ...s, messages: [...s.messages, botMsg], lastActive: new Date().toISOString() } : s
@@ -177,24 +240,19 @@ export default function App() {
     } finally {
       setIsLoading(false)
     }
-  }, [currentSessionId, messages, isLoading])
+  }, [currentSessionId, messages, isLoading, accessToken])
 
-  /* ── Feedback (thumbs up/down) ───────────────────────── */
+  // ── Feedback (thumbs up/down) ─────────────────────────────────────────────
   const handleFeedback = useCallback((msgId, type) => {
     setSessions(prev => prev.map(s =>
       s.id === currentSessionId
-        ? {
-            ...s,
-            messages: s.messages.map(m =>
-              m.id === msgId ? { ...m, feedback: m.feedback === type ? null : type } : m
-            ),
-          }
+        ? { ...s, messages: s.messages.map(m => m.id === msgId ? { ...m, feedback: m.feedback === type ? null : type } : m) }
         : s
     ))
-    submitFeedback(currentSessionId, msgId, type)
-  }, [currentSessionId])
+    submitFeedback(currentSessionId, msgId, type, accessToken)
+  }, [currentSessionId, accessToken])
 
-  /* ── Export ──────────────────────────────────────────── */
+  // ── Export ────────────────────────────────────────────────────────────────
   const handleExport = useCallback(() => {
     if (!currentSession) return
     const md = buildExportMarkdown(currentSession)
@@ -207,19 +265,54 @@ export default function App() {
     URL.revokeObjectURL(url)
   }, [currentSession])
 
-  /* ── Right panel data ────────────────────────────────── */
+  // ── New chat ──────────────────────────────────────────────────────────────
+  const handleNewChat = useCallback(() => {
+    const sid = genId()
+    setCurrentSessionId(sid)
+    setSessions(prev => [{
+      id: sid, title: 'Omega TK Session', messages: [],
+      createdAt: new Date().toISOString(), lastActive: new Date().toISOString(),
+    }, ...prev])
+    setView('chat')
+    setLeftOpen(false)
+  }, [])
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut()
+    // onAuthStateChange will clear user + accessToken + sessions
+  }, [])
+
+  // ── Right panel data ──────────────────────────────────────────────────────
   const lastBot = messages.filter(m => m.role === 'bot').at(-1)
   const queryDetails = {
     isFallback: lastBot?.data?.is_fallback ?? false,
-    attempts: lastBot?.data?.attempts ?? 1,
-    hasCode: !!(lastBot?.data?.code),
-    intent: lastBot?.data?.code ? 'CODE' : lastBot ? 'CONVERSATION' : '—',
+    attempts:   lastBot?.data?.attempts ?? 1,
+    hasCode:    !!(lastBot?.data?.code),
+    intent:     lastBot?.data?.code ? 'CODE' : lastBot ? 'CONVERSATION' : '—',
   }
   const feedbackStats = {
-    up: messages.filter(m => m.feedback === 'up').length,
+    up:   messages.filter(m => m.feedback === 'up').length,
     down: messages.filter(m => m.feedback === 'down').length,
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  // While Supabase resolves the existing session, show nothing (avoids flash)
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-sidebar">
+        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // Not authenticated — show full-screen login / signup
+  if (!user) {
+    return <AuthPage onLogin={setUser} />
+  }
+
+  // Authenticated — show the main three-panel layout
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 font-sans">
 
@@ -246,20 +339,12 @@ export default function App() {
         <LeftPanel
           sessions={sessions}
           currentSessionId={currentSessionId}
-          onSelectSession={(id) => { setCurrentSessionId(id); setView('chat'); setLeftOpen(false) }}
-          onNewChat={() => {
-            const sid = genId()
-            localStorage.setItem(LS_KEY, sid)
-            setCurrentSessionId(sid)
-            setSessions(prev => [{
-              id: sid, title: 'Omega TK Session', messages: [],
-              createdAt: new Date().toISOString(), lastActive: new Date().toISOString(),
-            }, ...prev])
-            setView('chat')
-            setLeftOpen(false)
-          }}
+          onSelectSession={handleSelectSession}
+          onNewChat={handleNewChat}
           activeView={view}
           onSelectView={setView}
+          user={user}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -276,6 +361,7 @@ export default function App() {
           onToggleRight={() => setRightOpen(true)}
           view={view}
           sessionId={currentSessionId}
+          accessToken={accessToken}
         />
       </div>
 
