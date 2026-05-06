@@ -153,9 +153,40 @@ export default function AuthPage({ onLogin }) {
             ))}
           </motion.div>
 
-          {/* Cold start note */}
+          {/* Impact */}
           <motion.div
             custom={4}
+            initial="hidden"
+            animate="show"
+            variants={fade}
+            className="mt-8 max-w-sm"
+          >
+            <p className="text-[12.5px] text-gray-600 leading-relaxed">
+              Cheminformatics teams spend hours hunting through 200+ pages of OpenEye docs
+              to write a single conformer script. This turns that into one prompt.
+            </p>
+
+            <div className="mt-5 grid grid-cols-3 gap-4">
+              {[
+                { value: '30s',     label: 'vs 30+ min of docs' },
+                { value: '$0.01',   label: 'per answer' },
+                { value: '100%',    label: 'cited sources' },
+              ].map(s => (
+                <div key={s.label}>
+                  <p className="text-[18px] font-semibold tracking-tight text-gray-900">
+                    {s.value}
+                  </p>
+                  <p className="text-[10.5px] text-gray-500 mt-0.5 leading-snug">
+                    {s.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Cold start note */}
+          <motion.div
+            custom={5}
             initial="hidden"
             animate="show"
             variants={fade}
@@ -170,7 +201,7 @@ export default function AuthPage({ onLogin }) {
 
         {/* Author */}
         <motion.div
-          custom={5}
+          custom={6}
           initial="hidden"
           animate="show"
           variants={fade}
